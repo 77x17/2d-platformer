@@ -1,0 +1,96 @@
+{
+    "checks": [
+        {
+            "name": "art_and_actors",
+            "passed": true,
+            "detail": "16 frames per actor, 3 dog + 3 cat encounters"
+        },
+        {
+            "name": "keyboard_start",
+            "passed": true,
+            "detail": "Enter starts from the home screen through the Input System"
+        },
+        {
+            "name": "spawn_grounded",
+            "passed": true,
+            "detail": "(4.00, 0.00, 0.00)"
+        },
+        {
+            "name": "run_acceleration",
+            "passed": true,
+            "detail": "Player x=6.898176"
+        },
+        {
+            "name": "variable_jump_height",
+            "passed": true,
+            "detail": "tap=1.46, hold=2.40"
+        },
+        {
+            "name": "coyote_jump",
+            "passed": true,
+            "detail": "Vertical speed=9.180004"
+        },
+        {
+            "name": "jump_buffer",
+            "passed": true,
+            "detail": "Queued just before landing"
+        },
+        {
+            "name": "lantern_stun_cooldown",
+            "passed": true,
+            "detail": "pulse=True, cooldownRejected=True, stunned=True"
+        },
+        {
+            "name": "stun_recovers",
+            "passed": true,
+            "detail": "Creature resumes after stun duration"
+        },
+        {
+            "name": "contact_respawn",
+            "passed": true,
+            "detail": "Contact respawns at the active lamp"
+        },
+        {
+            "name": "checkpoint",
+            "passed": true,
+            "detail": "Checkpoint 1 activated and health restored"
+        },
+        {
+            "name": "fall_respawn",
+            "passed": true,
+            "detail": "Fall returns to checkpoint"
+        },
+        {
+            "name": "moving_platform_carry",
+            "passed": true,
+            "detail": "Player y=2.30, platform y=2.30"
+        },
+        {
+            "name": "crumbling_platform",
+            "passed": true,
+            "detail": "Standing on old planks triggers collapse"
+        },
+        {
+            "name": "environment_interaction",
+            "passed": true,
+            "detail": "E wakes bridge with colliders"
+        },
+        {
+            "name": "pause",
+            "passed": true,
+            "detail": "Escape pauses through the Input System"
+        },
+        {
+            "name": "moon_completion",
+            "passed": true,
+            "detail": "Moon pickup ends level and unlocks next chapter reward flag"
+        },
+        {
+            "name": "restart",
+            "passed": true,
+            "detail": "Full restart resets progression and mechanisms"
+        }
+    ],
+    "passed": true,
+    "version": "6000.3.16f1"
+}
