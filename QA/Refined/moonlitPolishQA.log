@@ -1,0 +1,51 @@
+Mono path[0] = 'D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/Cuoi_Data/Managed'
+Mono config path = 'D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/MonoBleedingEdge/etc'
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.3.16f1 (a56f230f6470)
+[Subsystems] Discovering subsystems at path D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/Cuoi_Data/UnitySubsystems
+Forcing GfxDevice: Direct3D 11
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce RTX 3060 (ID=0x2504)
+    Vendor:   NVIDIA
+    VRAM:     12115 MB
+    Driver:   32.0.16.1088
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.085 seconds
+- Finished resetting the current domain, in  0.002 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+UnloadTime: 0.347600 ms
+POLISH_QA coyote_setting: PASS Grace window = 0.1
+POLISH_QA coyote_inside_window: PASS delayTicks=2, accepted=True
+POLISH_QA coyote_expired_window: PASS delayTicks=9, accepted=False
+POLISH_QA no_air_double_jump: PASS Second press after takeoff must not refresh grace
+POLISH_QA jump_from_ascending_platform: PASS ascendingGrounded=True, airborne=True, landed=True, row=0
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+POLISH_QA ride_two_full_cycles: PASS unstableFrames=0, largestFeetGap=0.007
+POLISH_QA jump_from_descending_platform: PASS Jump and land on a descending support
+POLISH_QA background_scrolls_while_idle: PASS Parallax tile offset changes without player movement
+POLISH_QA wind_gust_ramps: PASS Wind strength=0.9990274
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+POLISH_QA wind_gust_settles: PASS Gust returns to calm after seven seconds
+POLISH_QA darkness_shader_loaded: PASS Moonlit/LanternDarkness
+POLISH_QA pulse_expands_visibility: PASS Normal=6.394399, pulse=8.724839
+POLISH_QA dog_attack_telegraph: PASS Large exclamation visible during anticipation
+POLISH_QA dog_stun_cancels_warning: PASS Stun cancels wind-up and its marker
+POLISH_QA cat_attack_telegraph: PASS Large exclamation visible during anticipation
+POLISH_QA cat_stun_cancels_warning: PASS Stun cancels wind-up and its marker
+POLISH_QA crate_mechanic_removed: PASS No crate or plate in the playable scene
+POLISH_QA restart_resets_wind: PASS Restart restores event state
+POLISH_QA_DONE True
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.

@@ -23,6 +23,7 @@ namespace Moonlit.Editor
             art.dog = ImportSheet("Dog", true);
             art.cat = ImportSheet("Cat", true);
             art.environment = ImportSheet("Environment", false);
+            art.forestExtras = ImportSheet("ForestExtras", false);
             art.forest = ImportSingle("Forest", false);
             art.moon = ImportSingle("MoonShard", true);
             art.uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -115,10 +116,76 @@ namespace Moonlit.Editor
             i.SaveAndReimport(); return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
+        // Trim and register new assets without changing the original actor/environment atlases.
+        static Sprite[] ImportReadableSprites(string name, int columns, int rows, bool walkingSurface)
+        {
+            string path = Root + "Art/" + name + ".png";
+            var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            Configure(importer); importer.spriteImportMode = SpriteImportMode.Multiple;
+            var importSettings = new TextureImporterSettings(); importer.ReadTextureSettings(importSettings);
+            importSettings.spriteMeshType = SpriteMeshType.FullRect; importer.SetTextureSettings(importSettings);
+            importer.spritePixelsPerUnit = 100;
+            importer.SaveAndReimport();
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path); var pixels = texture.GetPixels32();
+            int cw = texture.width / columns, ch = texture.height / rows;
+            var factory = new SpriteDataProviderFactories(); factory.Init();
+            var provider = factory.GetSpriteEditorDataProviderFromObject(importer); provider.InitSpriteEditorDataProvider();
+            var previous = provider.GetSpriteRects(); var frames = new SpriteRect[columns * rows];
+            for (int row = 0; row < rows; row++) for (int col = 0; col < columns; col++)
+            {
+                int ox = col * cw, oy = (rows - 1 - row) * ch;
+                int minX = cw, maxX = 0, minY = ch, maxY = 0;
+                for (int y = 0; y < ch; y++) for (int x = 0; x < cw; x++)
+                {
+                    if (pixels[(oy + y) * texture.width + ox + x].a < 180) continue;
+                    minX = Mathf.Min(minX, x); maxX = Mathf.Max(maxX, x);
+                    minY = Mathf.Min(minY, y); maxY = Mathf.Max(maxY, y);
+                }
+                if (maxX <= minX || maxY <= minY) throw new Exception("Empty readability sprite: " + name);
+                int walkY = maxY;
+                if (walkingSurface)
+                {
+                    int margin = Mathf.Max(2, (maxX - minX) / 10);
+                    int left = minX + margin, right = maxX - margin;
+                    // Ignore isolated grass tips: the first continuous opaque row is the walking plane.
+                    for (int y = maxY; y > minY; y--)
+                    {
+                        int solid = 0;
+                        for (int x = left; x <= right; x++) if (pixels[(oy + y) * texture.width + ox + x].a >= 200) solid++;
+                        if (solid >= (right - left + 1) * .92f) { walkY = y; break; }
+                    }
+                    maxY = Mathf.Min(maxY, walkY + Mathf.Max(2, (walkY - minY) / 40));
+                }
+                var rect = new Rect(ox + minX, oy + minY, maxX - minX + 1, maxY - minY + 1);
+                Vector2 pivot = walkingSurface ? new Vector2(.5f, (walkY - minY + .5f) / rect.height) : Vector2.one * .5f;
+                string frameName = name + "_" + (row * columns + col).ToString("00");
+                var old = previous.FirstOrDefault(s => s.name == frameName);
+                frames[row * columns + col] = new SpriteRect { name = frameName, rect = rect, pivot = pivot,
+                    alignment = SpriteAlignment.Custom, spriteID = old != null ? old.spriteID : GUID.Generate() };
+            }
+            provider.SetSpriteRects(frames);
+            provider.GetDataProvider<ISpriteNameFileIdDataProvider>().SetNameFileIdPairs(frames.Select(s => new SpriteNameFileIdPair(s.name, s.spriteID)));
+            provider.Apply(); importer.SaveAndReimport();
+            return AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().OrderBy(s => s.name).ToArray();
+        }
+
+        [MenuItem("Moonlit/4 - Import readable tokens and platform surfaces")]
+        public static void PrepareReadabilityAssets()
+        {
+            var art = AssetDatabase.LoadAssetAtPath<MoonlitArt>(Root + "Settings/ArtLibrary.asset");
+            if (!art) return;
+            if (!art.moonToken) art.moonToken = ImportReadableSprites("MoonToken", 1, 1, false)[0];
+            if (art.mossPlatforms == null || art.mossPlatforms.Length != 4 || art.mossPlatforms.Any(s => !s))
+                art.mossPlatforms = ImportReadableSprites("MossPlatforms", 2, 2, true);
+            EditorUtility.SetDirty(art); AssetDatabase.SaveAssets();
+            Debug.Log("MOONLIT_READABILITY_READY: Moon token + four registered moss surfaces imported. No player build requested.");
+        }
+
         [MenuItem("Moonlit/2 - Build Windows executable")]
         public static void Build()
         {
             if (!File.Exists(Root + "Scenes/Level01_BanyanForest.unity")) Setup();
+            PreparePolishAssets();
             Directory.CreateDirectory("Builds/Windows");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
@@ -130,6 +197,18 @@ namespace Moonlit.Editor
             File.WriteAllText("QA/build-result.txt", $"Result: {report.summary.result}\nErrors: {report.summary.totalErrors}\nWarnings: {report.summary.totalWarnings}\nBytes: {report.summary.totalSize}\nDuration: {report.summary.totalTime}\n");
             if (report.summary.result != BuildResult.Succeeded) throw new Exception("Windows build failed: " + report.summary.result);
             Debug.Log("MOONLIT_BUILD_OK: Builds/Windows/Cuoi.exe");
+        }
+
+        [MenuItem("Moonlit/3 - Import forest additions (preserve existing art)")]
+        public static void PreparePolishAssets()
+        {
+            var art = AssetDatabase.LoadAssetAtPath<MoonlitArt>(Root + "Settings/ArtLibrary.asset");
+            if (art.forestExtras == null || art.forestExtras.Length != 16)
+            {
+                art.forestExtras = ImportSheet("ForestExtras", false);
+                EditorUtility.SetDirty(art); AssetDatabase.SaveAssets();
+            }
+            PrepareReadabilityAssets();
         }
     }
 }

@@ -1,0 +1,55 @@
+Mono path[0] = 'D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/Cuoi_Data/Managed'
+Mono config path = 'D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/MonoBleedingEdge/etc'
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.3.16f1 (a56f230f6470)
+[Subsystems] Discovering subsystems at path D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/Cuoi_Data/UnitySubsystems
+Forcing GfxDevice: Direct3D 11
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce RTX 3060 (ID=0x2504)
+    Vendor:   NVIDIA
+    VRAM:     12115 MB
+    Driver:   32.0.16.1088
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.083 seconds
+- Finished resetting the current domain, in  0.002 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+UnloadTime: 0.361100 ms
+REVISION_QA initial_tutorial: PASS First lesson opens on safe spawn ground
+REVISION_QA reading_freezes_gameplay: PASS Player, enemy, platform, timer and damage are frozen while reading
+REVISION_QA spotlight_shader: PASS Only focused object and instruction card stay visible
+REVISION_QA tutorial_keyboard_resume: PASS Enter resumes without jumping accidentally
+REVISION_QA idle_is_planted: PASS samePose=True, physicsDrift=0.00000, footDelta=0.00000
+REVISION_QA feet_inside_moss: PASS Visual feet offset=-0.085
+REVISION_QA release_stops_sliding: PASS Stop distance=0.1239996
+REVISION_QA left_edge_blocks_without_death: PASS x=1.26, minX=1.250, deaths=0, health=3
+REVISION_QA coherent_lifts_no_crate: PASS Two suspended wooden lifts; crate removed
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+REVISION_QA tutorial_focus_1: PASS safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)
+REVISION_QA tutorial_resume_1: PASS Gameplay and camera return after fade
+REVISION_QA tutorial_focus_2: PASS safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)
+REVISION_QA tutorial_resume_2: PASS Gameplay and camera return after fade
+REVISION_QA tutorial_focus_3: PASS safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)
+REVISION_QA tutorial_resume_3: PASS Gameplay and camera return after fade
+REVISION_QA tutorial_focus_4: PASS safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)
+REVISION_QA tutorial_resume_4: PASS Gameplay and camera return after fade
+REVISION_QA tutorial_focus_5: PASS safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)
+REVISION_QA tutorial_resume_5: PASS Gameplay and camera return after fade
+REVISION_QA death_keeps_lessons_seen: PASS Lessons do not repeat after a death
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+REVISION_QA home_cancels_modal: PASS No frozen state after leaving a tutorial
+REVISION_QA restart_resets_lessons: PASS A fresh run can teach again
+REVISION_QA_DONE True
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.

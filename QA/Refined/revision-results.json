@@ -1,0 +1,115 @@
+{
+    "passed": true,
+    "checks": [
+        {
+            "name": "initial_tutorial",
+            "passed": true,
+            "detail": "First lesson opens on safe spawn ground"
+        },
+        {
+            "name": "reading_freezes_gameplay",
+            "passed": true,
+            "detail": "Player, enemy, platform, timer and damage are frozen while reading"
+        },
+        {
+            "name": "spotlight_shader",
+            "passed": true,
+            "detail": "Only focused object and instruction card stay visible"
+        },
+        {
+            "name": "tutorial_keyboard_resume",
+            "passed": true,
+            "detail": "Enter resumes without jumping accidentally"
+        },
+        {
+            "name": "idle_is_planted",
+            "passed": true,
+            "detail": "samePose=True, physicsDrift=0.00000, footDelta=0.00000"
+        },
+        {
+            "name": "feet_inside_moss",
+            "passed": true,
+            "detail": "Visual feet offset=-0.085"
+        },
+        {
+            "name": "release_stops_sliding",
+            "passed": true,
+            "detail": "Stop distance=0.1239996"
+        },
+        {
+            "name": "left_edge_blocks_without_death",
+            "passed": true,
+            "detail": "x=1.26, minX=1.250, deaths=0, health=3"
+        },
+        {
+            "name": "coherent_lifts_no_crate",
+            "passed": true,
+            "detail": "Two suspended wooden lifts; crate removed"
+        },
+        {
+            "name": "tutorial_focus_1",
+            "passed": true,
+            "detail": "safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)"
+        },
+        {
+            "name": "tutorial_resume_1",
+            "passed": true,
+            "detail": "Gameplay and camera return after fade"
+        },
+        {
+            "name": "tutorial_focus_2",
+            "passed": true,
+            "detail": "safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)"
+        },
+        {
+            "name": "tutorial_resume_2",
+            "passed": true,
+            "detail": "Gameplay and camera return after fade"
+        },
+        {
+            "name": "tutorial_focus_3",
+            "passed": true,
+            "detail": "safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)"
+        },
+        {
+            "name": "tutorial_resume_3",
+            "passed": true,
+            "detail": "Gameplay and camera return after fade"
+        },
+        {
+            "name": "tutorial_focus_4",
+            "passed": true,
+            "detail": "safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)"
+        },
+        {
+            "name": "tutorial_resume_4",
+            "passed": true,
+            "detail": "Gameplay and camera return after fade"
+        },
+        {
+            "name": "tutorial_focus_5",
+            "passed": true,
+            "detail": "safeConfirm=True, targetViewport=(0.35, 0.41, 10.00)"
+        },
+        {
+            "name": "tutorial_resume_5",
+            "passed": true,
+            "detail": "Gameplay and camera return after fade"
+        },
+        {
+            "name": "death_keeps_lessons_seen",
+            "passed": true,
+            "detail": "Lessons do not repeat after a death"
+        },
+        {
+            "name": "home_cancels_modal",
+            "passed": true,
+            "detail": "No frozen state after leaving a tutorial"
+        },
+        {
+            "name": "restart_resets_lessons",
+            "passed": true,
+            "detail": "A fresh run can teach again"
+        }
+    ]
+}

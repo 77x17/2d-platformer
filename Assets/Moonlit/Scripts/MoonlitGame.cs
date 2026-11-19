@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 namespace Moonlit
 {
-    public enum GameState { Home, Playing, Paused, Respawning, Complete }
+    public enum GameState { Home, Playing, Paused, Respawning, Complete, Tutorial }
 
     public sealed class MoonlitGame : MonoBehaviour
     {
@@ -26,10 +26,12 @@ namespace Moonlit
         public MoonlitEffects effects { get; private set; }
         public MoonlitAudio audioFx { get; private set; }
         public MoonlitHud hud { get; private set; }
+        public ForestWind wind { get; private set; }
+        public LanternDarkness darkness { get; private set; }
+        public MoonlitTutorial tutorials { get; private set; }
         public readonly List<ForestCreature> enemies = new List<ForestCreature>();
         public Vector2 RespawnPoint { get; private set; } = new Vector2(4, .12f);
         float respawnTimer;
-        int hintStage;
 
         void Awake()
         {
@@ -48,8 +50,13 @@ namespace Moonlit
             cam.AddComponent<AudioListener>(); cameraRig = cam.AddComponent<MoonlitCamera>(); cameraRig.target = player; cameraRig.Initialize(art.forest);
             level = new GameObject("LEVEL 01 - Banyan forest").AddComponent<MoonlitLevel>(); level.Build(this);
             hud = new GameObject("Moonlit UI").AddComponent<MoonlitHud>(); hud.Build(this);
+            wind = new GameObject("Forest wind and horizontal leaves").AddComponent<ForestWind>(); wind.Initialize(this);
+            darkness = new GameObject("Lantern darkness shader mask").AddComponent<LanternDarkness>(); darkness.Initialize(this);
+            tutorials = gameObject.AddComponent<MoonlitTutorial>(); tutorials.Initialize(this);
             if (System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "-moonlitQA")) gameObject.AddComponent<MoonlitPlaytest>();
             if (System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "-moonlitRouteQA")) gameObject.AddComponent<MoonlitRoutePlaytest>();
+            if (System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "-moonlitPolishQA")) gameObject.AddComponent<MoonlitPolishPlaytest>();
+            if (System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "-moonlitRevisionQA")) gameObject.AddComponent<MoonlitRevisionPlaytest>();
         }
 
         void Update()
@@ -68,11 +75,6 @@ namespace Moonlit
             if (State == GameState.Playing)
             {
                 Elapsed += Time.deltaTime; Farthest = Mathf.Max(Farthest, player.transform.position.x);
-                if (hintStage == 0 && player.transform.position.x > 26) { hintStage++; Toast("GIỮ KHOẢNG CÁCH", "Nhấn F để làm choáng chó rừng, hoặc nhảy qua nó."); }
-                else if (hintStage == 1 && player.transform.position.x > 78) { hintStage++; Toast("NHỊP CỦA KHU RỪNG", "Chờ bệ đá đến gần rồi nhảy. Bệ sẽ mang Cuội theo."); }
-                else if (hintStage == 2 && player.transform.position.x > 114) { hintStage++; Toast("ĐỪNG DỪNG LẠI", "Cầu cũ sẽ rung rồi sụp. Nhảy tiếp trước khi ván rơi."); }
-                else if (hintStage == 3 && player.transform.position.x > 167) { hintStage++; Toast("THẮP SÁNG LỐI ĐI", "Đến cạnh miếu đèn và nhấn E để đánh thức cây cầu."); }
-                else if (hintStage == 4 && player.transform.position.x > 330) { hintStage++; Toast("ÁNH TRĂNG Ở RẤT GẦN", "Theo các bệ đá lên ngọn cây. Mảnh trăng đang chờ."); }
             }
             else if (State == GameState.Respawning)
             {
@@ -88,10 +90,11 @@ namespace Moonlit
 
         public void StartRun()
         {
-            Time.timeScale = 1; State = GameState.Playing; Health = 3; Deaths = Motes = CheckpointIndex = hintStage = 0;
+            tutorials.ResetForRun(); Time.timeScale = 1; State = GameState.Playing; Health = 3; Deaths = Motes = CheckpointIndex = 0;
             Elapsed = Farthest = 0; RespawnPoint = new Vector2(4, .12f);
             level.ResetLevel(true); player.ResetRun(); player.Teleport(RespawnPoint); cameraRig.Snap();
-            hud.RefreshState(); Toast("RỪNG ĐA", "A / D để di chuyển  •  Giữ Space để nhảy cao  •  F để bừng sáng");
+            wind.ResetWind();
+            hud.RefreshState();
         }
         public void TogglePause()
         {
@@ -101,7 +104,19 @@ namespace Moonlit
         }
         public void Home()
         {
+            tutorials.Cancel();
             Time.timeScale = 1; State = GameState.Home; player.Teleport(new Vector2(4, .12f)); cameraRig.Snap(); hud.RefreshState();
+        }
+        public void BeginTutorial()
+        {
+            State = GameState.Tutorial; Time.timeScale = 0; player.ClearInput();
+            player.Body.linearVelocity = Vector2.zero; hud.RefreshState();
+        }
+        public void EndTutorial()
+        {
+            if (State != GameState.Tutorial) return;
+            State = GameState.Playing; Time.timeScale = 1; player.ClearInput(.16f);
+            player.Invulnerable = Mathf.Max(player.Invulnerable, .65f); hud.RefreshState();
         }
         public void Hurt(bool falling = false)
         {

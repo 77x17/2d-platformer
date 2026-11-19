@@ -1,0 +1,105 @@
+{
+    "passed": true,
+    "checks": [
+        {
+            "name": "coyote_setting",
+            "passed": true,
+            "detail": "Grace window = 0.1"
+        },
+        {
+            "name": "coyote_inside_window",
+            "passed": true,
+            "detail": "delayTicks=2, accepted=True"
+        },
+        {
+            "name": "coyote_expired_window",
+            "passed": true,
+            "detail": "delayTicks=9, accepted=False"
+        },
+        {
+            "name": "no_air_double_jump",
+            "passed": true,
+            "detail": "Second press after takeoff must not refresh grace"
+        },
+        {
+            "name": "jump_from_ascending_platform",
+            "passed": true,
+            "detail": "ascendingGrounded=True, airborne=True, landed=True, row=0"
+        },
+        {
+            "name": "ride_two_full_cycles",
+            "passed": true,
+            "detail": "unstableFrames=0, largestFeetGap=0.009"
+        },
+        {
+            "name": "jump_from_descending_platform",
+            "passed": true,
+            "detail": "Jump and land on a descending support"
+        },
+        {
+            "name": "background_scrolls_while_idle",
+            "passed": true,
+            "detail": "Parallax tile offset changes without player movement"
+        },
+        {
+            "name": "wind_gust_ramps",
+            "passed": true,
+            "detail": "Wind strength=0.9990127"
+        },
+        {
+            "name": "wind_gust_settles",
+            "passed": true,
+            "detail": "Gust returns to calm after seven seconds"
+        },
+        {
+            "name": "darkness_shader_loaded",
+            "passed": true,
+            "detail": "Moonlit/LanternDarkness"
+        },
+        {
+            "name": "pulse_expands_visibility",
+            "passed": true,
+            "detail": "Normal=6.372864, pulse=8.645542"
+        },
+        {
+            "name": "dog_attack_telegraph",
+            "passed": true,
+            "detail": "Large exclamation visible during anticipation"
+        },
+        {
+            "name": "dog_stun_cancels_warning",
+            "passed": true,
+            "detail": "Stun cancels wind-up and its marker"
+        },
+        {
+            "name": "cat_attack_telegraph",
+            "passed": true,
+            "detail": "Large exclamation visible during anticipation"
+        },
+        {
+            "name": "cat_stun_cancels_warning",
+            "passed": true,
+            "detail": "Stun cancels wind-up and its marker"
+        },
+        {
+            "name": "push_crate_opens_bridge",
+            "passed": true,
+            "detail": "open=True, distance=5.50, player=(53.21, 0.59)"
+        },
+        {
+            "name": "crate_is_jumpable",
+            "passed": true,
+            "detail": "Player clears the docked crate"
+        },
+        {
+            "name": "crate_resets_on_respawn",
+            "passed": true,
+            "detail": "No soft lock after a fall"
+        },
+        {
+            "name": "restart_resets_wind_puzzle",
+            "passed": true,
+            "detail": "Restart restores event and mechanism state"
+        }
+    ]
+}

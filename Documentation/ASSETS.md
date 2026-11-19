@@ -1,5 +1,15 @@
 # Asset handoff
 
+## Bản Refined hiện tại
+
+Toàn bộ địa hình, bệ gỗ, rễ/cành và đạo cụ chính dùng lại `Environment.png` gốc. Atlas ForestExtras còn lưu để tham khảo; hiện chỉ ba sprite lá nhỏ được dùng cho gió. Không spawn thùng, bàn đạp, bè tre hoặc dây thừng của bản Polish. Dây treo bệ nâng được vẽ bằng LineRenderer mảnh, hai đầu nối theo cấu trúc cành–bệ. Không phát sinh ảnh AI mới trong lần sửa Refined.
+
+## Bổ sung 18/11/2026
+
+`ForestExtras.png` là atlas 4×4 mới, tạo bằng **image_gen tích hợp**, sau đó dùng image_gen chỉnh nền về alpha trong suốt và giữ nguyên 16 ô. Prompt gốc và bước chỉnh nền lưu ở `polish-asset-prompt.txt`. Thứ tự: log, bamboo, carved stone, roots, crate, plate, leaf, branch, rope, stump, steps, planks, golden leaf, teal leaf, fern, vine. Ô bậc thang được giữ làm prop dự phòng; các bệ gameplay dùng mặt đi ngang rõ ràng. `ArtLibrary.forestExtras` chứa 16 sprite và có thể thay độc lập với bộ cũ.
+
+Importer dùng kích thước thực tế 1254×1254, alpha-trim và pivot top-center. Không resample/ghi đè PNG khi slice.
+
 Tất cả 6 PNG được tạo bằng **imagegen tích hợp** trong phiên làm việc này và đã chép vào `Assets/Moonlit/Art/`. Không phụ thuộc đường dẫn generated_images ngoài project. Không lấy sprite từ itch.io.
 
 | PNG | Layout | Cách dùng |

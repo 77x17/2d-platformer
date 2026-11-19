@@ -14,13 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Moonlit.PlayerTuning
   runSpeed: 6.4
   groundAcceleration: 65
+  groundDeceleration: 110
+  feetInset: 0.065
   airAcceleration: 38
   jumpSpeed: 13.5
   gravity: 36
   fallMultiplier: 1.25
   maxFallSpeed: 23
-  coyoteTime: 0.13
+  coyoteTime: 0.1
   jumpBuffer: 0.14
   pulseRadius: 4.3
   pulseCooldown: 3
   stunDuration: 2.6
+  lightRadius: 6.4
+  lightSoftEdge: 2.3
+  pulseLightRadius: 9
+  ambientVisibility: 0.3

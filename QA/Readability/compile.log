@@ -1,0 +1,8 @@
+Readability source check - 2026-11-19 (Asia/Saigon)
+Compiler: Unity 6000.3.16f1 bundled Roslyn, project Editor reference response files.
+Runtime Assembly-CSharp: exit code 0, no compiler diagnostics.
+Editor Assembly-CSharp-Editor: exit code 0, no compiler diagnostics.
+Initial importer API errors were corrected before this successful check.
+PNG validation: MoonToken 1261x1247 RGBA, MossPlatforms 1254x1254 RGBA; corner alpha 0 for both.
+No Windows player built. No new gameplay/render playtest performed.
+Asset import and ArtLibrary wiring run automatically after the Unity Editor refreshes and compiles.

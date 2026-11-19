@@ -9,12 +9,17 @@ namespace Moonlit
     {
         MoonlitGame game;
         RectTransform root;
-        GameObject home, hud, pause, victory, toast;
+        GameObject home, hud, pause, victory, toast, tutorialScreen;
         Text timer, motes, zone, abilityState, prompt, toastTitle, toastBody, result, mute;
         Image abilityFill, progressFill, fade;
+        Image tokenIcon;
+        float tokenFlash;
         Image[] hearts;
         CanvasGroup toastGroup;
         float toastTimer;
+        Text tutorialTitle, tutorialBody, tutorialAction, tutorialProgress, tutorialSubject, tutorialContinueText;
+        Button tutorialContinue;
+        CanvasGroup tutorialGroup;
         readonly Color white = new Color(.89f, .95f, .92f);
         readonly Color muted = new Color(.50f, .67f, .68f);
         readonly Color panel = new Color(.025f, .065f, .10f, .91f);
@@ -27,7 +32,7 @@ namespace Moonlit
             gameObject.AddComponent<GraphicRaycaster>();
             root = GetComponent<RectTransform>();
             if (!FindFirstObjectByType<EventSystem>()) { var es = new GameObject("UI EventSystem"); es.AddComponent<EventSystem>(); es.AddComponent<InputSystemUIInputModule>(); }
-            BuildHome(); BuildHud(); BuildPause(); BuildVictory();
+            BuildHome(); BuildHud(); BuildPause(); BuildVictory(); BuildTutorial();
             toast = Panel("Chapter message", root, new Vector2(470, 120), new Vector2(660, 95), new Color(.025f, .07f, .10f, .9f)).gameObject;
             Bar(toast.transform, 0, 0, 3, 95, Visuals.Gold);
             toastTitle = Label(toast.transform, "", 24, 16, 620, 30, 20, Visuals.Gold, FontStyle.Bold);
@@ -71,9 +76,12 @@ namespace Moonlit
             var icon = Panel("Moon icon", quest.transform, new Vector2(14, 6), new Vector2(43, 43), Color.white); icon.sprite = game.art.moon; icon.preserveAspect = true;
             Label(quest.transform, "TÌM MẢNH TRĂNG", 69, 7, 230, 23, 15, white, FontStyle.Bold);
             Label(quest.transform, "0 / 4    •    Theo lối sáng", 69, 31, 230, 22, 13, muted);
-            var stats = Panel("Statistics", hud.transform, new Vector2(1254, 28), new Vector2(218, 70), panel);
-            motes = Label(stats.transform, "✦  00 / 26", 18, 8, 190, 26, 18, Visuals.Mint, FontStyle.Bold);
-            timer = Label(stats.transform, "00:00", 18, 38, 190, 22, 14, muted);
+            var stats = Panel("Statistics", hud.transform, new Vector2(1254, 28), new Vector2(218, 86), panel);
+            tokenIcon = Panel("Moon token counter icon", stats.transform, new Vector2(15, 12), new Vector2(30, 30), Color.white);
+            tokenIcon.sprite = game.art.moonToken ? game.art.moonToken : game.art.moon; tokenIcon.preserveAspect = true;
+            motes = Label(stats.transform, "00 / 40", 58, 8, 145, 26, 19, Visuals.Gold, FontStyle.Bold);
+            Label(stats.transform, "ĐỒNG TRĂNG", 58, 34, 145, 18, 10, muted, FontStyle.Bold);
+            timer = Label(stats.transform, "00:00", 18, 58, 190, 22, 14, muted);
             Button(hud.transform, "Ⅱ", new Vector2(1490, 28), new Vector2(66, 70), game.TogglePause, false);
             Bar(hud.transform, 36, 871, 1528, 2, new Color(.4f, .7f, .65f, .18f));
             progressFill = Bar(hud.transform, 36, 871, 1, 2, Visuals.Mint);
@@ -114,12 +122,35 @@ namespace Moonlit
             Button(victory.transform, "VỀ TRANG CHỦ", new Vector2(565, 751), new Vector2(470, 53), game.Home, false);
         }
 
+        void BuildTutorial()
+        {
+            tutorialScreen = Panel("Focused tutorial", root, Vector2.zero, new Vector2(1600, 900), Color.clear).gameObject;
+            Stretch(tutorialScreen.GetComponent<RectTransform>());
+            tutorialScreen.GetComponent<Image>().raycastTarget = true;
+            tutorialGroup = tutorialScreen.AddComponent<CanvasGroup>();
+            tutorialProgress = Label(tutorialScreen.transform, "", 64, 45, 800, 32, 17, Visuals.Gold, FontStyle.Bold);
+            Label(tutorialScreen.transform, "ĐANG TẠM DỪNG • ĐỌC THEO NHỊP CỦA BẠN", 805, 45, 730, 32, 15, muted, FontStyle.Normal, TextAnchor.MiddleRight);
+            Bar(tutorialScreen.transform, 64, 97, 1472, 2, new Color(.3f, .47f, .43f, .6f));
+            var card = Panel("Instruction card", tutorialScreen.transform, new Vector2(920, 224), new Vector2(616, 476), new Color(.018f, .055f, .065f, .98f));
+            Bar(card.transform, 0, 0, 4, 476, Visuals.Gold);
+            tutorialTitle = Label(card.transform, "", 32, 28, 552, 85, 29, white, FontStyle.Bold);
+            tutorialBody = Label(card.transform, "", 32, 126, 552, 192, 22, new Color(.72f, .83f, .80f));
+            Bar(card.transform, 32, 335, 552, 1, new Color(.25f, .39f, .35f));
+            tutorialAction = Label(card.transform, "", 32, 354, 552, 36, 17, Visuals.Gold, FontStyle.Bold);
+            tutorialContinue = Button(card.transform, "ĐÃ HIỂU — TIẾP TỤC   [ENTER]", new Vector2(32, 405), new Vector2(552, 49), () => game.tutorials.Continue(), true);
+            tutorialContinueText = tutorialContinue.GetComponentInChildren<Text>();
+            tutorialSubject = Label(tutorialScreen.transform, "", 238, 728, 590, 38, 20, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleCenter);
+        }
+
         void Update()
         {
             if (!game) return;
             int seconds = (int)game.Elapsed;
             timer.text = $"{seconds / 60:00}:{seconds % 60:00}   /   HÀNH TRÌNH";
-            motes.text = $"✦  {game.Motes:00} / {game.TotalMotes}";
+            motes.text = $"{game.Motes:00} / {game.TotalMotes}";
+            tokenFlash = Mathf.Max(0, tokenFlash - Time.deltaTime * 3);
+            motes.color = Color.Lerp(Visuals.Gold, Color.white, tokenFlash);
+            tokenIcon.rectTransform.localScale = Vector3.one * (1 + tokenFlash * .18f);
             float x = game.player.transform.position.x;
             zone.text = x < 79 ? "Lối mòn đom đóm" : x < 147 ? "Qua dòng sương bạc" : x < 274 ? "Cầu rễ cổ thụ" : "Ngọn cây giữ trăng";
             for (int i = 0; i < 3; i++) hearts[i].color = i < game.Health ? Visuals.Gold : new Color(.28f, .34f, .34f);
@@ -127,6 +158,16 @@ namespace Moonlit
             abilityState.text = game.player.Cooldown <= 0 ? "Sẵn sàng  •  Làm choáng" : $"Đang hồi sáng  {game.player.Cooldown:0.0}s";
             progressFill.rectTransform.sizeDelta = new Vector2(1528 * Mathf.Clamp01(game.Farthest / MoonlitLevel.GoalX), 2);
             prompt.text = game.level.lanternSwitch.Near && !game.level.lanternSwitch.Activated ? "[ E ]   THẮP ĐÈN • ĐÁNH THỨC CÂY CẦU" : "";
+            if (game.tutorials && game.tutorials.Active)
+            {
+                var lesson = game.tutorials;
+                tutorialTitle.text = lesson.Title; tutorialBody.text = lesson.Description;
+                tutorialAction.text = lesson.Action; tutorialSubject.text = lesson.Subject;
+                tutorialSubject.rectTransform.anchoredPosition = new Vector2(238, lesson.CurrentId == 2 ? -828 : -728);
+                tutorialProgress.text = $"RỪNG ĐA   /   HƯỚNG DẪN {lesson.CurrentId + 1:00} / {MoonlitTutorial.Total:00}";
+                tutorialGroup.alpha = lesson.CardOpacity; tutorialContinue.interactable = lesson.CanContinue;
+                tutorialContinueText.text = lesson.CanContinue ? "ĐÃ HIỂU — TIẾP TỤC   [ENTER]" : "QUAN SÁT ĐỐI TƯỢNG...";
+            }
             if (mute) mute.text = game.audioFx.Muted ? "ÂM THANH: TẮT   [M]" : "ÂM THANH: BẬT   [M]";
             toastTimer -= Time.deltaTime;
             toastGroup.alpha = game.State == GameState.Playing ? Mathf.Clamp01(toastTimer) * Mathf.Clamp01((6 - toastTimer) * 3) : 0;
@@ -136,8 +177,11 @@ namespace Moonlit
         {
             home.SetActive(game.State == GameState.Home); hud.SetActive(game.State == GameState.Playing || game.State == GameState.Respawning);
             pause.SetActive(game.State == GameState.Paused); victory.SetActive(game.State == GameState.Complete);
-            if (game.State == GameState.Complete) result.text = $"{(int)game.Elapsed / 60:00}:{(int)game.Elapsed % 60:00}     •     {game.Motes} / {game.TotalMotes} đốm trăng     •     {game.Deaths} lần hồi sinh";
+            tutorialScreen.SetActive(game.State == GameState.Tutorial);
+            if (game.Motes == 0) tokenFlash = 0;
+            if (game.State == GameState.Complete) result.text = $"{(int)game.Elapsed / 60:00}:{(int)game.Elapsed % 60:00}     •     {game.Motes} / {game.TotalMotes} đồng trăng     •     {game.Deaths} lần hồi sinh";
         }
+        public void TokenCollected() { tokenFlash = 1; }
         public void ShowToast(string title, string description) { toastTitle.text = title; toastBody.text = description; toastTimer = 6; }
         public void SetFade(float opacity) { fade.color = new Color(.01f, .035f, .07f, opacity); }
 

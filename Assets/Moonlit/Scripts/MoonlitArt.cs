@@ -10,6 +10,11 @@ namespace Moonlit
         [Tooltip("Rows: idle, walk, pounce, stunned. Four frames per row.")]
         public Sprite[] dog, cat;
         public Sprite[] environment;
+        [Tooltip("Four flat walking surfaces. Pivots sit on the solid moss line, not the transparent image top.")]
+        public Sprite[] mossPlatforms;
+        public Sprite moonToken;
+        [Tooltip("16 extra props: log, bamboo, stone, roots, crate, plate, leaf, branch, rope, stump, steps, planks, leaves, fern, vine.")]
+        public Sprite[] forestExtras;
         public Sprite forest, moon;
         public Material spriteMaterial;
         public Font uiFont;

@@ -10,15 +10,17 @@ Mục tiêu: đến đỉnh rễ cây và lấy mảnh trăng thứ nhất. Tone
 
 | Đoạn / tọa độ X | Ý đồ | Nội dung thực thi |
 |---|---|---|
-| 0–79: Lối mòn đom đóm | Học chạy, giữ/nhả nhảy và bừng sáng | Bệ rộng, khoảng hở đầu tiên, chó có báo hiệu lao, tuyến bậc thang và đèn checkpoint 1 |
-| 79–114: Dòng sương bạc | Quan sát nhịp trước khi nhảy | Bệ lên/xuống, bệ ngang, chỗ nghỉ rộng, mèo có báo hiệu trước khi vồ |
+| 0–79: Lối mòn đom đóm | Học chạy, giữ/nhả nhảy và bừng sáng | Tutorial cơ bản ở spawn, biên trái có đá chặn, chó được giới thiệu bằng spotlight, bậc rêu tăng nhẹ rồi hạ xuống checkpoint 1; không có thùng |
+| 79–114: Dòng sương bạc | Quan sát nhịp trước khi nhảy | Tutorial bệ nâng từ bãi an toàn, bệ gỗ treo nâng dọc, bệ rêu tĩnh, chỗ nghỉ rộng và tutorial mèo |
 | 114–190: Cầu rễ cổ thụ | Giữ đà, rồi tương tác mở đường | 3 cầu sụp sau 0,7 giây và hồi sau 3,5 giây; checkpoint 2; chó; E thắp đèn mở cầu qua khe |
 | 190–274: Tầng rễ trên cao | Tổng hợp kỹ năng đã học, có điểm nghỉ | Checkpoint 3–4, mèo, nhảy lên rồi hạ dần, chó ở bãi rễ, bổ sung tuyến đường để thời lượng gần mục tiêu 2 phút |
-| 274–370: Ngọn cây giữ trăng | Chuỗi nhảy cuối cùng | Bệ ngang, mèo, 2 cầu sụp, checkpoint 5, bậc đá đi lên và mảnh trăng ở X=362 |
+| 274–370: Ngọn cây giữ trăng | Chuỗi nhảy cuối cùng | Bệ rêu tĩnh, mèo, 2 cầu sụp, checkpoint 5, bậc đá đi lên và mảnh trăng ở X=362 |
 
 Gặp thú / rơi vực: mất một sinh lực và hồi tại checkpoint. Hết ba sinh lực được cấp lại ba tại checkpoint để bản prototype không phạt lặp đoạn quá dài. E mở cầu vĩnh viễn cho lượt chơi hiện tại, không reset khi chết. Chơi lại màn reset toàn bộ.
 
 Cuối màn lưu phần thưởng bám vách dành cho màn 2; đây mới là cờ mở khóa và UI, chưa có controller bám vách.
+
+Bản Refined dùng 6 tutorial dừng gameplay, chuyển camera và spotlight đối tượng, xác nhận đọc xong để tiếp tục. Gỡ puzzle thùng và trở lại art môi trường gốc; chi tiết nhịp màn, chân nhân vật và điểm neo bệ ở `DESIGN_REVISION.md`.
 
 ## Hướng cho cả 4 màn — chưa triển khai ngoài màn 1
 
@@ -33,6 +35,6 @@ Boss cuối nên là chuỗi vượt chướng ngại/giải đố có chu kỳ.
 
 ## Khả năng thực thi
 
-Màn 1 chỉ cần Rigidbody2D, Collider2D, state machine đơn giản và sprite animator dạng đổi frame. Các tương tác tự khép kín, không phụ thuộc inventory hoặc quest framework. Chưa cần Cinemachine, DOTween hay package ngoài template Unity hiện có. Art có 6 PNG AI; shader glow, hạt và UI dựng bằng code. Khi thay art chỉ cần giữ pivot/PPU và thứ tự animation trong ArtLibrary.
+Màn 1 dùng Rigidbody2D, Collider2D, state machine đơn giản và sprite animator dạng đổi frame. Các tương tác tự khép kín, không phụ thuộc inventory hoặc quest framework. Chưa cần Cinemachine, DOTween hay package ngoài template Unity hiện có. Art gồm 7 PNG AI (6 gốc + ForestExtras); shader HLSL phủ bóng tối, hạt và UI dựng bằng code. Khi thay art giữ pivot/PPU và thứ tự animation trong ArtLibrary. Chi tiết bản polish 18/11 và thuật ngữ báo cáo nằm trong `POLISH_REPORT.md`.
 
 Trước mốc 21/11/2026: ưu tiên playtest nhịp nhảy với người thật, xác nhận thời gian hoàn thành trung bình gần 2 phút, thay frame AI không nhất quán nếu có, thử build trên một máy Windows thứ hai. Không mở thêm phạm vi intro hoặc boss trong giai đoạn polish màn 1.

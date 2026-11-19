@@ -51,6 +51,7 @@ namespace Moonlit
     {
         public float sway = 3, bob, speed = 1, phase;
         public bool flicker;
+        public bool windAffected;
         Vector3 origin;
         SpriteRenderer sr;
         Color tint;
@@ -59,7 +60,8 @@ namespace Moonlit
         {
             float t = Time.time * speed + phase;
             transform.localPosition = origin + Vector3.up * Mathf.Sin(t) * bob;
-            transform.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(t) * sway);
+            float wind = windAffected && MoonlitGame.Instance && MoonlitGame.Instance.wind ? MoonlitGame.Instance.wind.Strength : 0;
+            transform.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(t) * sway + wind * (6 + Mathf.Sin(t * 3.1f) * 3));
             if (flicker && sr) { var c = tint; c.a *= .77f + .23f * Mathf.Sin(t * 2.3f); sr.color = c; }
         }
     }
@@ -84,7 +86,7 @@ namespace Moonlit
             for (int i = 0; i < 260; i++)
             {
                 var pos = new Vector2((float)rng.NextDouble() * length, (float)rng.NextDouble() * 10 - 1);
-                var c = i % 3 == 0 ? Visuals.Gold : Visuals.Mint;
+                var c = new Color(.45f, .75f, .61f); // Ambient insects stay muted green; collectibles are solid gold.
                 var sr = Visuals.Sprite("Drifting firefly", Visuals.Square, pos, transform, i % 2 == 0 ? -5 : 20, .035f + (float)rng.NextDouble() * .035f);
                 motes.Add(new Mote { sr = sr, origin = pos, ambient = true, phase = (float)rng.NextDouble() * 8, color = c });
             }
@@ -102,6 +104,13 @@ namespace Moonlit
                 motes.Add(new Mote { sr = sr, origin = at, velocity = Random.insideUnitCircle * strength + Vector2.up * .6f,
                     life = Random.Range(.3f, .8f), color = color, size = size });
             }
+        }
+
+        public void CollectToken(Vector2 at, Sprite sprite)
+        {
+            var feedback = new GameObject("Moon token pickup feedback"); feedback.transform.SetParent(transform);
+            feedback.AddComponent<TokenCollectFeedback>().Initialize(sprite, at);
+            Ring(at, Visuals.Gold, .65f); Burst(at, Visuals.Gold, 6, 1.2f);
         }
 
         public void Ring(Vector2 at, Color color, float radius = 4.3f)
@@ -122,7 +131,7 @@ namespace Moonlit
                 {
                     float t = Time.time * .6f + m.phase;
                     m.sr.transform.position = m.origin + new Vector2(Mathf.Sin(t) * .7f, Mathf.Cos(t * .7f) * .45f);
-                    var c = m.color; c.a = .2f + .6f * Mathf.Pow((Mathf.Sin(t * 2) + 1) * .5f, 3); m.sr.color = c;
+                    var c = m.color; c.a = .12f + .30f * Mathf.Pow((Mathf.Sin(t * 2) + 1) * .5f, 3); m.sr.color = c;
                     continue;
                 }
                 m.age += Time.deltaTime;

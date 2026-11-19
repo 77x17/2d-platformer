@@ -1,0 +1,50 @@
+Mono path[0] = 'D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/Cuoi_Data/Managed'
+Mono config path = 'D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/MonoBleedingEdge/etc'
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.3.16f1 (a56f230f6470)
+[Subsystems] Discovering subsystems at path D:/77x17/2d-platformer/.moonlit-revision-build/Builds/Windows/Cuoi_Data/UnitySubsystems
+Forcing GfxDevice: Direct3D 11
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce RTX 3060 (ID=0x2504)
+    Vendor:   NVIDIA
+    VRAM:     12115 MB
+    Driver:   32.0.16.1088
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.082 seconds
+- Finished resetting the current domain, in  0.002 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+UnloadTime: 0.364000 ms
+MOONLIT_QA art_and_actors: PASS 16 frames per actor, 3 dog + 3 cat encounters
+MOONLIT_QA keyboard_start: PASS Enter starts from the home screen through the Input System
+MOONLIT_QA spawn_grounded: PASS (4.00, 0.00, 0.00)
+MOONLIT_QA run_acceleration: PASS Player x=6.829816
+MOONLIT_QA variable_jump_height: PASS tap=1.46, hold=2.40
+MOONLIT_QA coyote_jump: PASS Vertical speed=9.180004
+MOONLIT_QA jump_buffer: PASS Queued just before landing
+MOONLIT_QA lantern_stun_cooldown: PASS pulse=True, cooldownRejected=True, stunned=True
+MOONLIT_QA stun_recovers: PASS Creature resumes after stun duration
+MOONLIT_QA contact_respawn: PASS Contact respawns at the active lamp
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+MOONLIT_QA checkpoint: PASS Checkpoint 1 activated and health restored
+MOONLIT_QA fall_respawn: PASS Fall returns to checkpoint
+MOONLIT_QA moving_platform_carry: PASS Player y=2.04, platform y=2.03
+MOONLIT_QA crumbling_platform: PASS Standing on old planks triggers collapse
+MOONLIT_QA environment_interaction: PASS E wakes bridge with colliders
+MOONLIT_QA pause: PASS Escape pauses through the Input System
+MOONLIT_QA moon_completion: PASS Moon pickup ends level and unlocks next chapter reward flag
+MOONLIT_QA restart: PASS Full restart resets progression and mechanisms
+MOONLIT_QA_DONE True
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.

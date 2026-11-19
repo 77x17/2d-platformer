@@ -8,6 +8,7 @@ namespace Moonlit
         public Vector2 travel = new Vector2(0, 1.4f);
         public float period = 4;
         public Vector2 Delta { get; private set; }
+        public Vector2 Velocity => Delta / Time.fixedDeltaTime;
         Vector2 origin, previous;
         Rigidbody2D rb;
         float clock;
@@ -35,8 +36,9 @@ namespace Moonlit
         void Start() { origin = transform.position; surface = GetComponent<Collider2D>(); renderers = GetComponentsInChildren<SpriteRenderer>(); }
         void OnCollisionStay2D(Collision2D collision)
         {
-            if (timer < 0 && collision.collider.GetComponent<CuoiController>() && collision.transform.position.y > origin.y - .15f) timer = .7f;
+            if (collision.collider.GetComponent<CuoiController>() && collision.transform.position.y > origin.y - .15f) NotifyStanding();
         }
+        public void NotifyStanding() { if (timer < 0 && !Fallen) timer = .7f; }
         void Update()
         {
             if ((timer < 0 && !Fallen) || MoonlitGame.Instance.State != GameState.Playing) return;
@@ -75,7 +77,9 @@ namespace Moonlit
             var g = MoonlitGame.Instance;
             if (kind == PickupKind.Mote)
             {
-                Collected = true; g.Motes++; g.effects.Burst(transform.position, Visuals.Mint, 10, 2); g.audioFx.Play("collect"); gameObject.SetActive(false);
+                Collected = true; g.Motes++;
+                g.effects.CollectToken(transform.position, g.art.moonToken ? g.art.moonToken : g.art.moon);
+                g.hud.TokenCollected(); g.audioFx.Play("collect"); gameObject.SetActive(false);
             }
             else if (kind == PickupKind.Checkpoint)
             {

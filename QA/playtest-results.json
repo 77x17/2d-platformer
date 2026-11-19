@@ -18,12 +18,12 @@
         {
             "name": "run_acceleration",
             "passed": true,
-            "detail": "Player x=6.898176"
+            "detail": "Player x=6.838412"
         },
         {
             "name": "variable_jump_height",
             "passed": true,
-            "detail": "tap=1.46, hold=2.40"
+            "detail": "tap=1.47, hold=2.41"
         },
         {
             "name": "coyote_jump",
@@ -63,7 +63,7 @@
         {
             "name": "moving_platform_carry",
             "passed": true,
-            "detail": "Player y=2.30, platform y=2.30"
+            "detail": "Player y=2.31, platform y=2.30"
         },
         {
             "name": "crumbling_platform",

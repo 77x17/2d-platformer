@@ -80,6 +80,29 @@ MonoBehaviour:
   - {fileID: 902897634, guid: b8deddc9e80d09c48a4df7efd6e5cc0d, type: 3}
   - {fileID: 1346872119, guid: b8deddc9e80d09c48a4df7efd6e5cc0d, type: 3}
   - {fileID: -1915089447, guid: b8deddc9e80d09c48a4df7efd6e5cc0d, type: 3}
+  mossPlatforms:
+  - {fileID: -151066301, guid: 13076bf276b5aeb4c8a777bd475bfd91, type: 3}
+  - {fileID: -1591765704, guid: 13076bf276b5aeb4c8a777bd475bfd91, type: 3}
+  - {fileID: -774689368, guid: 13076bf276b5aeb4c8a777bd475bfd91, type: 3}
+  - {fileID: 1378362786, guid: 13076bf276b5aeb4c8a777bd475bfd91, type: 3}
+  moonToken: {fileID: -1387880358, guid: d595b01cc07868044bd0dd92ca4aa15b, type: 3}
+  forestExtras:
+  - {fileID: 1355317897, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -1144081576, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -817083159, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -2043274814, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: 1729089510, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -946686470, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -141238171, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -1187031069, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: 843617788, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -1539901298, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: 1043712570494120684, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -7607727765043256845, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: -2698421748272090078, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: 7613204378009095387, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: 7033997058236065518, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
+  - {fileID: 7882984738191953853, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
   forest: {fileID: 21300000, guid: 8120de27d260c7a479923751acf81cbd, type: 3}
   moon: {fileID: 21300000, guid: 28786997e2ba3a546b10014da6122dbd, type: 3}
   spriteMaterial: {fileID: 2100000, guid: a4db439df86eb3a45881aa5aa90f995a, type: 2}

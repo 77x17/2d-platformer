@@ -26,6 +26,7 @@ namespace Moonlit
         IEnumerator Start()
         {
             g = MoonlitGame.Instance; output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../QA")); Directory.CreateDirectory(output);
+            g.tutorials.Enabled = false; // Isolated physics fixtures; full route exercises actual lessons.
             InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             testKeyboard = InputSystem.AddDevice<Keyboard>("Moonlit QA keyboard"); testKeyboard.MakeCurrent();
             report.version = Application.unityVersion;

@@ -13,7 +13,7 @@ namespace Moonlit
         {
             public bool completed;
             public float seconds, farthest;
-            public int deaths, jumps, pulses, reachedSurface;
+            public int deaths, jumps, pulses, reachedSurface, tutorialsSeen;
             public string lastPosition;
         }
         IEnumerator Start()
@@ -21,13 +21,18 @@ namespace Moonlit
             var g = MoonlitGame.Instance; yield return new WaitForSeconds(2);
             g.StartRun(); g.player.TestInput = true;
             var surfaces = g.level.GetComponentsInChildren<BoxCollider2D>(true)
-                .Where(c => !c.isTrigger && c.gameObject.layer == 8 && c.size.y < 20)
+                .Where(c => !c.isTrigger && c.gameObject.layer == 8 && c.size.y < 20 && !c.GetComponent<PushableCrate>())
                 .OrderBy(c => c.transform.position.x).ToArray();
             int current = 0, airTarget = -1, lastCheckpoint = 0;
             float jumpTime = -10;
             string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "../../QA")); Directory.CreateDirectory(dir);
             while (g.Elapsed < 150 && g.State != GameState.Complete)
             {
+                if (g.State == GameState.Tutorial)
+                {
+                    if (g.tutorials.CanContinue) g.tutorials.Continue();
+                    yield return null; continue;
+                }
                 if (g.State != GameState.Playing) { yield return null; continue; }
                 var p = g.player; Vector2 pos = p.transform.position;
                 if (g.level.lanternSwitch.Near) g.Interact();
@@ -78,7 +83,7 @@ namespace Moonlit
                 yield return null;
             }
             var result = new Result { completed = g.State == GameState.Complete, seconds = g.Elapsed, farthest = g.Farthest, deaths = g.Deaths,
-                jumps = g.player.Jumps, pulses = g.player.Pulses, reachedSurface = current, lastPosition = g.player.transform.position.ToString() };
+                jumps = g.player.Jumps, pulses = g.player.Pulses, reachedSurface = current, tutorialsSeen = g.tutorials.SeenCount, lastPosition = g.player.transform.position.ToString() };
             File.WriteAllText(Path.Combine(dir, "route-results.json"), JsonUtility.ToJson(result, true));
             MoonlitCapture.Save(Path.Combine(dir, "route-final.png"));
             Debug.Log("MOONLIT_ROUTE_DONE " + JsonUtility.ToJson(result));
