@@ -93,6 +93,7 @@ namespace Moonlit
                 MoonlitCapture.Save(Path.Combine(output, e.isCat ? "polish-cat-warning.png" : "polish-dog-warning.png"));
                 e.Stun(1); yield return null;
                 CheckResult(e.isCat ? "cat_stun_cancels_warning" : "dog_stun_cancels_warning", !e.WarningVisible, "Stun cancels wind-up and its marker");
+                yield return AttackTrial(e);
             }
 
             CheckResult("crate_mechanic_removed", FindObjectsByType<PushableCrate>(FindObjectsSortMode.None).Length == 0, "No crate or plate in the playable scene");
@@ -115,6 +116,25 @@ namespace Moonlit
             yield return new WaitForSeconds(.04f);
             bool jumped = g.player.Jumps > before;
             CheckResult(expected ? "coyote_inside_window" : "coyote_expired_window", jumped == expected, $"delayTicks={delayTicks}, accepted={jumped}");
+        }
+
+        IEnumerator AttackTrial(ForestCreature enemy)
+        {
+            enemy.ResetCreature();
+            // Near the detection limit, and beyond the patrol's left edge on the same ground.
+            float distance = enemy.isCat ? 5.2f : 4.5f;
+            g.player.Teleport(new Vector2(enemy.transform.position.x - distance, enemy.floor + .04f));
+            g.player.Invulnerable = 0;
+            int deaths = g.Deaths;
+            float start = Time.time;
+            while (!enemy.WarningVisible && Time.time < start + .15f) yield return null;
+            bool warnedOnEntry = enemy.WarningVisible;
+            float hitDeadline = start + (enemy.isCat ? 1.28f : 1.12f);
+            while (g.Deaths == deaths && Time.time < hitDeadline) yield return null;
+            bool hit = g.Deaths == deaths + 1;
+            CheckResult(enemy.isCat ? "cat_pounce_reaches_player" : "dog_lunge_reaches_player",
+                warnedOnEntry && hit, $"Immediate warning={warnedOnEntry}, hit={hit}, elapsed={Time.time - start:F2}s");
+            while (g.State == GameState.Respawning) yield return null;
         }
     }
 }

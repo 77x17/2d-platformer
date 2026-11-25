@@ -1,213 +1,487 @@
+using System.Collections;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
 
 namespace Moonlit
 {
-    public sealed class MoonlitHud : MonoBehaviour
+    public sealed partial class MoonlitHud : MonoBehaviour
     {
         MoonlitGame game;
         RectTransform root;
-        GameObject home, hud, pause, victory, toast, tutorialScreen;
-        Text timer, motes, zone, abilityState, prompt, toastTitle, toastBody, result, mute;
-        Image abilityFill, progressFill, fade;
-        Image tokenIcon;
-        float tokenFlash;
-        Image[] hearts;
-        CanvasGroup toastGroup;
-        float toastTimer;
-        Text tutorialTitle, tutorialBody, tutorialAction, tutorialProgress, tutorialSubject, tutorialContinueText;
+        TMP_FontAsset displayFont, interfaceFont;
+        GameObject home, hud, pause, victory, defeat, ending, tutorialScreen, picker, splash, credits;
+        Image matte, fade, progressFill, abilityFill;
+        Image promptBoard, bossBoard, introBoard;
+        readonly Image[] bossBuds = new Image[6];
+        readonly Image[] hearts = new Image[3];
+        readonly Vector3[] iconCorners = new Vector3[4];
+        Sprite heartFull, heartEmpty;
+        RectTransform lifeCard;
+        Canvas mainCanvas;
+        TMP_Text healthCount;
+        MoonlitEmblem lantern;
+        TMP_Text lifeChapter, zone, shardCount, motes, abilityState, currentSkill, prompt, bossCount, bossHint, introName;
+        TMP_Text toastTitle, toastBody, tutorialTitle, tutorialBody, tutorialAction, tutorialProgress, tutorialSubject;
+        CanvasGroup toastGroup, introGroup, tutorialGroup, splashGroup, victoryGroup, defeatGroup;
         Button tutorialContinue;
-        CanvasGroup tutorialGroup;
-        readonly Color white = new Color(.89f, .95f, .92f);
-        readonly Color muted = new Color(.50f, .67f, .68f);
-        readonly Color panel = new Color(.025f, .065f, .10f, .91f);
+        GameState? lastState;
+        int buttonActivationFrame = -1, previousHealth = 3, previousShards = -1;
+        int shownMotes = -1, shownTotal = -1, shownCooldown = -1;
+        float toastTimer, tokenFlash, heartFlash, shardFlash, lanternFlash, splashTime, panelTime;
+        bool showingSplash = true;
+        public bool ButtonActivatedThisFrame => buttonActivationFrame == Time.frameCount;
+        public bool BlocksDefaultSubmit => showingSplash || (picker && picker.activeSelf) || (credits && credits.activeSelf);
+        public bool HeartDisplayVisible => lifeCard && lifeCard.gameObject.activeInHierarchy;
+        public int VisibleHeartCount
+        {
+            get
+            {
+                int count = 0;
+                if (HeartDisplayVisible && heartFull)
+                    foreach (var heart in hearts)
+                        if (heart && heart.sprite == heartFull && heart.isActiveAndEnabled) count++;
+                return count;
+            }
+        }
+
+        public Rect HeartScreenRect(int index)
+        {
+            if (index < 0 || index >= hearts.Length || !HeartDisplayVisible) return Rect.zero;
+            hearts[index].rectTransform.GetWorldCorners(iconCorners);
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(null, iconCorners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(null, iconCorners[2]);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        static readonly Color ink = new Color(.029f,.072f,.105f,.97f);
+        static readonly Color cream = new Color(1,.925f,.775f);
+        static readonly Color paper = new Color(.84f,.84f,.78f);
+        static readonly Color gold = new Color(1,.711f,.314f);
+        static readonly Color dim = new Color(.62f,.71f,.71f);
+        static readonly Color vermilion = new Color(.72f,.247f,.145f);
+        static readonly Color rule = new Color(.78f,.61f,.37f,.57f);
 
         public void Build(MoonlitGame owner)
         {
             game = owner;
-            var canvas = gameObject.AddComponent<Canvas>(); canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = gameObject.AddComponent<CanvasScaler>(); scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize; scaler.referenceResolution = new Vector2(1600, 900); scaler.matchWidthOrHeight = .5f;
+            mainCanvas = gameObject.AddComponent<Canvas>();
+            mainCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = gameObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1600, 900);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             gameObject.AddComponent<GraphicRaycaster>();
-            root = GetComponent<RectTransform>();
-            if (!FindFirstObjectByType<EventSystem>()) { var es = new GameObject("UI EventSystem"); es.AddComponent<EventSystem>(); es.AddComponent<InputSystemUIInputModule>(); }
-            BuildHome(); BuildHud(); BuildPause(); BuildVictory(); BuildTutorial();
-            toast = Panel("Chapter message", root, new Vector2(470, 120), new Vector2(660, 95), new Color(.025f, .07f, .10f, .9f)).gameObject;
-            Bar(toast.transform, 0, 0, 3, 95, Visuals.Gold);
-            toastTitle = Label(toast.transform, "", 24, 16, 620, 30, 20, Visuals.Gold, FontStyle.Bold);
-            toastBody = Label(toast.transform, "", 24, 50, 615, 35, 17, white);
-            toastGroup = toast.AddComponent<CanvasGroup>(); toastGroup.blocksRaycasts = false;
-            fade = Panel("Respawn fade", root, Vector2.zero, new Vector2(1600, 900), new Color(.01f, .035f, .07f, 0)); Stretch(fade.rectTransform); fade.raycastTarget = false;
+            RectTransform fullScreen = GetComponent<RectTransform>();
+            matte = Panel("Menu letterbox", fullScreen, 0, 0, 1600, 900, ink);
+            Stretch(matte.rectTransform);
+            root = new GameObject("16 by 9 safe region", typeof(RectTransform)).GetComponent<RectTransform>();
+            root.SetParent(fullScreen, false);
+            root.anchorMin = root.anchorMax = root.pivot = new Vector2(.5f, .5f);
+            root.sizeDelta = new Vector2(1600, 900);
+            if (!FindFirstObjectByType<EventSystem>())
+            {
+                var es = new GameObject("Menu input");
+                es.AddComponent<EventSystem>();
+                es.AddComponent<InputSystemUIInputModule>();
+            }
+            interfaceFont = TMP_Settings.defaultFontAsset;
+            displayFont = TMP_FontAsset.CreateFontAsset("Constantia", "Regular", 90);
+            if (displayFont && interfaceFont)
+                displayFont.fallbackFontAssetTable = new System.Collections.Generic.List<TMP_FontAsset> { interfaceFont };
+            if (!displayFont) displayFont = interfaceFont;
+            BuildHome();
+            BuildHud();
+            BuildPause();
+            BuildVictory();
+            BuildDefeat();
+            BuildEnding();
+            BuildTutorial();
+            BuildCredits();
+            var note = Panel("Checkpoint notification", root, 480, 110, 640, 84, ink);
+            Bar(note.transform, 0, 0, 3, 84, gold);
+            toastTitle = Label(note.transform, "", 18, 8, 602, 31, 19, gold, true);
+            toastBody = Label(note.transform, "", 18, 38, 600, 40, 18, paper);
+            toastGroup = note.gameObject.AddComponent<CanvasGroup>();
+            toastGroup.blocksRaycasts = false;
+            BuildSplash();
+            fade = Panel("Respawn fade", fullScreen, 0, 0, 1600, 900, Color.clear);
+            Stretch(fade.rectTransform);
             RefreshState();
-        }
-
-        void BuildHome()
-        {
-            home = Panel("Home", root, Vector2.zero, new Vector2(1600, 900), new Color(.015f, .045f, .075f, .48f)).gameObject; Stretch(home.GetComponent<RectTransform>());
-            var p = Panel("Title panel", home.transform, new Vector2(68, 88), new Vector2(655, 680), new Color(.018f, .055f, .085f, .91f));
-            Bar(p.transform, 0, 0, 3, 680, new Color(.53f, .82f, .7f, .55f));
-            Label(p.transform, "MỘT CHUYẾN ĐI QUA MIỀN CỔ TÍCH", 36, 35, 580, 26, 15, Visuals.Gold, FontStyle.Bold);
-            Label(p.transform, "CUỘI", 27, 86, 590, 152, 120, white, FontStyle.Bold);
-            Label(p.transform, "ĐƯỜNG VỀ TRĂNG", 36, 238, 580, 52, 31, Visuals.Mint);
-            Bar(p.transform, 36, 316, 80, 2, Visuals.Gold);
-            Label(p.transform, "Một ngọn đèn nhỏ.\nMột khu rừng đang thức giấc.\nMột mảnh trăng dẫn lối về nhà.", 36, 345, 575, 116, 24, new Color(.66f, .78f, .77f));
-            Button(p.transform, "BẮT ĐẦU HÀNH TRÌNH    →", new Vector2(36, 500), new Vector2(470, 65), game.StartRun, true);
-            Label(p.transform, "MÀN 01  /  RỪNG ĐA", 36, 600, 420, 26, 16, muted, FontStyle.Bold);
-            var moon = Panel("Moon emblem", home.transform, new Vector2(1005, 220), new Vector2(330, 330), Color.white); moon.sprite = game.art.moon; moon.preserveAspect = true;
-            Label(home.transform, "01 — 04", 1070, 580, 230, 35, 22, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleCenter);
-            Label(home.transform, "NHẶT ÁNH TRĂNG\nTÌM ĐƯỜNG VỀ", 950, 630, 450, 80, 21, white, FontStyle.Normal, TextAnchor.MiddleCenter);
-            Label(home.transform, "A  D   DI CHUYỂN     /     SPACE   NHẢY     /     F   BỪNG SÁNG     /     E   TƯƠNG TÁC", 88, 820, 1300, 30, 16, new Color(.70f, .81f, .79f));
-            Label(home.transform, "ENTER  ĐỂ BẮT ĐẦU", 1260, 820, 265, 30, 13, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleRight);
-            Button(home.transform, "THOÁT GAME", new Vector2(1375, 44), new Vector2(180, 44), () => Application.Quit(), false);
         }
 
         void BuildHud()
         {
-            hud = new GameObject("In-game HUD", typeof(RectTransform)); hud.transform.SetParent(root, false); Stretch(hud.GetComponent<RectTransform>());
-            var chapter = Panel("Chapter", hud.transform, new Vector2(36, 28), new Vector2(320, 86), panel);
-            Bar(chapter.transform, 0, 0, 3, 86, Visuals.Mint);
-            Label(chapter.transform, "01   /   RỪNG ĐA", 20, 13, 280, 28, 20, white, FontStyle.Bold);
-            zone = Label(chapter.transform, "Lối mòn đom đóm", 20, 48, 280, 25, 15, muted);
-            hearts = new Image[3];
-            for (int i = 0; i < 3; i++) { hearts[i] = Bar(hud.transform, 43 + i * 27, 132, 13, 13, Visuals.Gold); hearts[i].rectTransform.localRotation = Quaternion.Euler(0, 0, 45); }
-            Label(hud.transform, "SINH LỰC", 132, 127, 130, 24, 12, muted, FontStyle.Bold);
-            var quest = Panel("Moon objective", hud.transform, new Vector2(644, 28), new Vector2(312, 60), panel);
-            var icon = Panel("Moon icon", quest.transform, new Vector2(14, 6), new Vector2(43, 43), Color.white); icon.sprite = game.art.moon; icon.preserveAspect = true;
-            Label(quest.transform, "TÌM MẢNH TRĂNG", 69, 7, 230, 23, 15, white, FontStyle.Bold);
-            Label(quest.transform, "0 / 4    •    Theo lối sáng", 69, 31, 230, 22, 13, muted);
-            var stats = Panel("Statistics", hud.transform, new Vector2(1254, 28), new Vector2(218, 86), panel);
-            tokenIcon = Panel("Moon token counter icon", stats.transform, new Vector2(15, 12), new Vector2(30, 30), Color.white);
-            tokenIcon.sprite = game.art.moonToken ? game.art.moonToken : game.art.moon; tokenIcon.preserveAspect = true;
-            motes = Label(stats.transform, "00 / 40", 58, 8, 145, 26, 19, Visuals.Gold, FontStyle.Bold);
-            Label(stats.transform, "ĐỒNG TRĂNG", 58, 34, 145, 18, 10, muted, FontStyle.Bold);
-            timer = Label(stats.transform, "00:00", 18, 58, 190, 22, 14, muted);
-            Button(hud.transform, "Ⅱ", new Vector2(1490, 28), new Vector2(66, 70), game.TogglePause, false);
-            Bar(hud.transform, 36, 871, 1528, 2, new Color(.4f, .7f, .65f, .18f));
-            progressFill = Bar(hud.transform, 36, 871, 1, 2, Visuals.Mint);
-            var ability = Panel("Lantern ability", hud.transform, new Vector2(36, 767), new Vector2(305, 79), panel);
-            var key = Panel("F key", ability.transform, new Vector2(13, 13), new Vector2(50, 50), new Color(.22f, .27f, .22f));
-            Label(key.transform, "F", 0, 0, 50, 50, 26, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleCenter);
-            Label(ability.transform, "BỪNG SÁNG", 78, 9, 215, 23, 16, Visuals.Gold, FontStyle.Bold);
-            abilityState = Label(ability.transform, "Sẵn sàng", 78, 32, 215, 22, 13, muted);
-            Bar(ability.transform, 78, 61, 209, 3, new Color(.28f, .34f, .31f));
-            abilityFill = Bar(ability.transform, 78, 61, 209, 3, Visuals.Gold);
-            prompt = Label(hud.transform, "", 460, 729, 680, 58, 22, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleCenter);
-            Label(hud.transform, "A D  Di chuyển     SPACE  Nhảy     E  Tương tác     ESC  Dừng", 750, 807, 814, 30, 15, new Color(.74f, .83f, .8f), FontStyle.Normal, TextAnchor.MiddleRight);
-        }
+            hud = Layer("In-game HUD");
+            var life = Panel("Health and lantern", mainCanvas.transform, 26, 22, 330, 80, ink);
+            lifeCard = life.rectTransform;
+            var vitalsOverlay = life.gameObject.AddComponent<Canvas>();
+            vitalsOverlay.overrideSorting = true;
+            vitalsOverlay.sortingOrder = 30;
+            Bar(life.transform, 0, 0, 3, 80, vermilion);
+            heartFull = Resources.Load<Sprite>("HeartFull");
+            heartEmpty = Resources.Load<Sprite>("HeartEmpty");
+            for (int i = 0; i < hearts.Length; i++)
+            {
+                hearts[i] = Panel($"Heart {i + 1}", life.transform, 13 + i * 41, 10, 38, 31, Color.white);
+                hearts[i].sprite = heartFull;
+                hearts[i].preserveAspect = true;
+            }
+            healthCount = Label(life.transform, "3/3", 137, 10, 43, 31, 19, cream, true);
+            lifeChapter = Label(life.transform, "", 15, 47, 167, 24, 17, cream, true);
+            Bar(life.transform, 181, 13, 1, 54, rule);
+            lantern = Emblem(life.transform, MoonlitEmblem.Shape.Star, 194, 12, 32, 32, gold);
+            Label(life.transform, "J / X", 234, 9, 87, 29, 17, paper, true);
+            abilityState = Label(life.transform, "", 196, 45, 130, 22, 14, dim);
+            Bar(life.transform, 196, 67, 117, 3, new Color(.29f,.33f,.32f));
+            abilityFill = Bar(life.transform, 196, 67, 117, 3, gold);
+            var stats = Panel("Moon counters", hud.transform, 1270, 22, 234, 80, ink);
+            var shard = Panel("Shard", stats.transform, 12, 8, 53, 60, Color.white);
+            shard.sprite = game.art.moon;
+            shard.preserveAspect = true;
+            shardCount = Label(stats.transform, "", 70, 8, 158, 32, 21, cream, true);
+            motes = Label(stats.transform, "", 70, 43, 161, 22, 15, dim);
+            var pauseControl = Button(hud.transform, "", 1515, 22, 59, 65, game.TogglePause, false);
+            pauseControl.name = "Tạm dừng";
+            Bar(pauseControl.transform, 21,22,6,22,cream);
+            Bar(pauseControl.transform, 33,22,6,22,cream);
+            zone = Label(life.transform, "", 3, 82, 540, 30, 16, cream, true);
+            AddShadow(zone);
+            currentSkill = Label(hud.transform, "", 30, 827, 445, 31, 16, cream, true);
+            AddShadow(currentSkill);
+            Bar(hud.transform, 29, 865, 1541, 3, new Color(.22f,.31f,.34f,.8f));
+            progressFill = Bar(hud.transform, 29, 865, 1, 3, gold);
 
-        void BuildPause()
-        {
-            pause = Panel("Pause overlay", root, Vector2.zero, new Vector2(1600, 900), new Color(.01f, .035f, .06f, .86f)).gameObject; Stretch(pause.GetComponent<RectTransform>());
-            Label(pause.transform, "NGHỈ DƯỚI TÁN ĐA", 400, 185, 800, 70, 46, white, FontStyle.Bold, TextAnchor.MiddleCenter);
-            Label(pause.transform, "Ngọn đèn vẫn chờ bạn.", 400, 273, 800, 40, 21, muted, FontStyle.Normal, TextAnchor.MiddleCenter);
-            Button(pause.transform, "TIẾP TỤC", new Vector2(565, 357), new Vector2(470, 63), game.TogglePause, true);
-            Button(pause.transform, "CHƠI LẠI MÀN", new Vector2(565, 438), new Vector2(470, 63), game.StartRun, false);
-            Button(pause.transform, "VỀ TRANG CHỦ", new Vector2(565, 519), new Vector2(470, 63), game.Home, false);
-            var sound = Button(pause.transform, "ÂM THANH: BẬT   [M]", new Vector2(565, 616), new Vector2(470, 48), () => game.audioFx.Toggle(), false); mute = sound.GetComponentInChildren<Text>();
-            Label(pause.transform, "R  Hồi sinh tại đèn gần nhất     •     Giữ / nhả Space để đổi độ cao cú nhảy", 300, 745, 1000, 32, 17, muted, FontStyle.Normal, TextAnchor.MiddleCenter);
-        }
-
-        void BuildVictory()
-        {
-            victory = Panel("Completion", root, Vector2.zero, new Vector2(1600, 900), new Color(.018f, .055f, .08f, .92f)).gameObject; Stretch(victory.GetComponent<RectTransform>());
-            var icon = Panel("Recovered moon fragment", victory.transform, new Vector2(705, 65), new Vector2(190, 190), Color.white); icon.sprite = game.art.moon; icon.preserveAspect = true;
-            Label(victory.transform, "MẢNH TRĂNG ĐẦU TIÊN", 250, 277, 1100, 70, 49, white, FontStyle.Bold, TextAnchor.MiddleCenter);
-            Label(victory.transform, "1 / 4    —    MỘT CHÚT ÁNH SÁNG ĐÃ TRỞ VỀ", 300, 367, 1000, 38, 19, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleCenter);
-            result = Label(victory.transform, "", 300, 430, 1000, 48, 23, Visuals.Mint, FontStyle.Normal, TextAnchor.MiddleCenter);
-            var reward = Panel("Next chapter reward", victory.transform, new Vector2(480, 521), new Vector2(640, 95), new Color(.1f, .21f, .23f));
-            Label(reward.transform, "ĐÃ MỞ KHÓA: BÁM VÁCH", 20, 15, 600, 30, 21, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleCenter);
-            Label(reward.transform, "Kỹ năng dành cho màn 2 • Chuyến đi sẽ còn tiếp tục", 20, 53, 600, 26, 16, muted, FontStyle.Normal, TextAnchor.MiddleCenter);
-            Button(victory.transform, "CHƠI LẠI MÀN 1", new Vector2(565, 670), new Vector2(470, 63), game.StartRun, true);
-            Button(victory.transform, "VỀ TRANG CHỦ", new Vector2(565, 751), new Vector2(470, 53), game.Home, false);
-        }
-
-        void BuildTutorial()
-        {
-            tutorialScreen = Panel("Focused tutorial", root, Vector2.zero, new Vector2(1600, 900), Color.clear).gameObject;
-            Stretch(tutorialScreen.GetComponent<RectTransform>());
-            tutorialScreen.GetComponent<Image>().raycastTarget = true;
-            tutorialGroup = tutorialScreen.AddComponent<CanvasGroup>();
-            tutorialProgress = Label(tutorialScreen.transform, "", 64, 45, 800, 32, 17, Visuals.Gold, FontStyle.Bold);
-            Label(tutorialScreen.transform, "ĐANG TẠM DỪNG • ĐỌC THEO NHỊP CỦA BẠN", 805, 45, 730, 32, 15, muted, FontStyle.Normal, TextAnchor.MiddleRight);
-            Bar(tutorialScreen.transform, 64, 97, 1472, 2, new Color(.3f, .47f, .43f, .6f));
-            var card = Panel("Instruction card", tutorialScreen.transform, new Vector2(920, 224), new Vector2(616, 476), new Color(.018f, .055f, .065f, .98f));
-            Bar(card.transform, 0, 0, 4, 476, Visuals.Gold);
-            tutorialTitle = Label(card.transform, "", 32, 28, 552, 85, 29, white, FontStyle.Bold);
-            tutorialBody = Label(card.transform, "", 32, 126, 552, 192, 22, new Color(.72f, .83f, .80f));
-            Bar(card.transform, 32, 335, 552, 1, new Color(.25f, .39f, .35f));
-            tutorialAction = Label(card.transform, "", 32, 354, 552, 36, 17, Visuals.Gold, FontStyle.Bold);
-            tutorialContinue = Button(card.transform, "ĐÃ HIỂU — TIẾP TỤC   [ENTER]", new Vector2(32, 405), new Vector2(552, 49), () => game.tutorials.Continue(), true);
-            tutorialContinueText = tutorialContinue.GetComponentInChildren<Text>();
-            tutorialSubject = Label(tutorialScreen.transform, "", 238, 728, 590, 38, 20, Visuals.Gold, FontStyle.Bold, TextAnchor.MiddleCenter);
+            promptBoard = Panel("Nearby sign", hud.transform, 400, 769, 800, 62, ink);
+            Emblem(promptBoard.transform, MoonlitEmblem.Shape.Spark, 15, 20, 21, 21, gold);
+            prompt = Label(promptBoard.transform, "", 47, 3, 734, 55, 20, cream, false, TextAlignmentOptions.Center);
+            bossBoard = Panel("Banyan encounter", hud.transform, 365, 736, 870, 103, ink);
+            Bar(bossBoard.transform, 0, 0, 4, 103, vermilion);
+            bossCount = Label(bossBoard.transform, "", 24, 9, 819, 29, 18, gold, true, TextAlignmentOptions.Center);
+            bossHint = Label(bossBoard.transform, "", 22, 41, 826, 50, 20, cream, false, TextAlignmentOptions.Center);
+            for (int i = 0; i < bossBuds.Length; i++)
+                bossBuds[i] = Bar(bossBoard.transform, 322 + i * 37 + (i / 2) * 4, 90, 30, 4, rule);
+            introBoard = Panel("Chapter opening", hud.transform, 491, 95, 618, 99, new Color(.025f,.07f,.105f,.91f));
+            Bar(introBoard.transform, 162, 91, 294, 1, rule);
+            introName = Label(introBoard.transform, "", 20, 4, 578, 81, 38, cream, false, TextAlignmentOptions.Center, true);
+            introGroup = introBoard.gameObject.AddComponent<CanvasGroup>();
+            introGroup.blocksRaycasts = false;
         }
 
         void Update()
         {
             if (!game) return;
-            int seconds = (int)game.Elapsed;
-            timer.text = $"{seconds / 60:00}:{seconds % 60:00}   /   HÀNH TRÌNH";
-            motes.text = $"{game.Motes:00} / {game.TotalMotes}";
-            tokenFlash = Mathf.Max(0, tokenFlash - Time.deltaTime * 3);
-            motes.color = Color.Lerp(Visuals.Gold, Color.white, tokenFlash);
-            tokenIcon.rectTransform.localScale = Vector3.one * (1 + tokenFlash * .18f);
-            float x = game.player.transform.position.x;
-            zone.text = x < 79 ? "Lối mòn đom đóm" : x < 147 ? "Qua dòng sương bạc" : x < 274 ? "Cầu rễ cổ thụ" : "Ngọn cây giữ trăng";
-            for (int i = 0; i < 3; i++) hearts[i].color = i < game.Health ? Visuals.Gold : new Color(.28f, .34f, .34f);
-            abilityFill.rectTransform.sizeDelta = new Vector2(209 * game.player.PulseReady, 3);
-            abilityState.text = game.player.Cooldown <= 0 ? "Sẵn sàng  •  Làm choáng" : $"Đang hồi sáng  {game.player.Cooldown:0.0}s";
-            progressFill.rectTransform.sizeDelta = new Vector2(1528 * Mathf.Clamp01(game.Farthest / MoonlitLevel.GoalX), 2);
-            prompt.text = game.level.lanternSwitch.Near && !game.level.lanternSwitch.Activated ? "[ E ]   THẮP ĐÈN • ĐÁNH THỨC CÂY CẦU" : "";
-            if (game.tutorials && game.tutorials.Active)
+            float dt = Time.unscaledDeltaTime;
+            if (credits.activeSelf)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) CloseCredits();
+            }
+            else if (game.State == GameState.Home)
+            {
+                UpdateHomeInput(dt);
+                UpdateGlints();
+            }
+            if (game.State == GameState.Complete)
+            {
+                panelTime += dt;
+                victoryGroup.alpha = Mathf.SmoothStep(0, 1, (panelTime - .12f) / .7f);
+                fragment.rectTransform.anchoredPosition = new Vector2(260, -30 + Mathf.Sin(panelTime * 2) * 7);
+            }
+            if (game.State == GameState.Defeat)
+            {
+                panelTime += dt;
+                defeatGroup.alpha = Mathf.SmoothStep(0, 1, panelTime / .85f);
+            }
+            if (HeartDisplayVisible) UpdateHearts(dt);
+            if (game.State == GameState.Playing || game.State == GameState.Respawning) UpdateHud(dt);
+            if (game.State == GameState.Tutorial && game.tutorials && game.tutorials.Active)
             {
                 var lesson = game.tutorials;
-                tutorialTitle.text = lesson.Title; tutorialBody.text = lesson.Description;
-                tutorialAction.text = lesson.Action; tutorialSubject.text = lesson.Subject;
-                tutorialSubject.rectTransform.anchoredPosition = new Vector2(238, lesson.CurrentId == 2 ? -828 : -728);
-                tutorialProgress.text = $"RỪNG ĐA   /   HƯỚNG DẪN {lesson.CurrentId + 1:00} / {MoonlitTutorial.Total:00}";
-                tutorialGroup.alpha = lesson.CardOpacity; tutorialContinue.interactable = lesson.CanContinue;
-                tutorialContinueText.text = lesson.CanContinue ? "ĐÃ HIỂU — TIẾP TỤC   [ENTER]" : "QUAN SÁT ĐỐI TƯỢNG...";
+                tutorialTitle.text = lesson.Title;
+                tutorialBody.text = lesson.Description;
+                tutorialAction.text = lesson.Action;
+                tutorialSubject.text = lesson.Subject;
+                tutorialProgress.text = $"HƯỚNG DẪN   ·   {lesson.CurrentId + 1} / {MoonlitTutorial.Total}";
+                tutorialGroup.alpha = lesson.CardOpacity;
+                tutorialContinue.interactable = lesson.CanContinue;
             }
-            if (mute) mute.text = game.audioFx.Muted ? "ÂM THANH: TẮT   [M]" : "ÂM THANH: BẬT   [M]";
-            toastTimer -= Time.deltaTime;
-            toastGroup.alpha = game.State == GameState.Playing ? Mathf.Clamp01(toastTimer) * Mathf.Clamp01((6 - toastTimer) * 3) : 0;
+            if (game.State == GameState.Paused)
+                soundLabel.text = game.audioFx.Muted ? "ÂM THANH TẮT   [M]" : "ÂM THANH BẬT   [M]";
+            toastTimer = Mathf.Max(0, toastTimer - Time.deltaTime);
+            toastGroup.alpha = game.State == GameState.Playing
+                ? Mathf.Min(Mathf.Clamp01(toastTimer * 3), Mathf.Clamp01((4 - toastTimer) * 4)) : 0;
+        }
+
+        void UpdateHud(float dt)
+        {
+            var level = game.level;
+            var player = game.player;
+            float x = player.transform.position.x;
+            zone.text = level.AreaName(x);
+            if (game.Shards != previousShards)
+            {
+                shardFlash = previousShards < 0 ? 0 : 1;
+                previousShards = game.Shards;
+                shardCount.text = $"{game.Shards} / 4 mảnh";
+            }
+            shardFlash = Mathf.Max(0, shardFlash - dt * 2);
+            shardCount.rectTransform.localScale = Vector3.one * (1 + shardFlash * .10f);
+            if (shownMotes != game.Motes || shownTotal != game.TotalMotes)
+            {
+                shownMotes = game.Motes; shownTotal = game.TotalMotes;
+                motes.text = $"{shownMotes} / {shownTotal} hạt trăng";
+            }
+            tokenFlash = Mathf.Max(0, tokenFlash - dt * 2.5f);
+            motes.color = Color.Lerp(dim, gold, tokenFlash);
+            abilityFill.rectTransform.sizeDelta = new Vector2(117 * player.PulseReady, 3);
+            int cooldown = Mathf.CeilToInt(player.Cooldown * 10);
+            if (cooldown != shownCooldown)
+            {
+                if (cooldown == 0 && shownCooldown > 0) lanternFlash = 1;
+                shownCooldown = cooldown;
+                abilityState.text = cooldown == 0 ? "Sẵn sàng" : $"Hồi {cooldown * .1f:0.0} s";
+            }
+            lanternFlash = Mathf.Max(0, lanternFlash - dt * 2.4f);
+            lantern.color = Color.Lerp(Color.Lerp(dim, gold, player.PulseReady), Color.white, lanternFlash);
+            currentSkill.text = game.Chapter == 2 ? "SPACE ×2   Nhảy đôi" : game.Chapter == 3 ? "GIỮ HƯỚNG + SPACE   Leo vách"
+                : game.Chapter == 4 ? player.DashReady >= .99f ? "SHIFT / K   Lướt" : "Lướt đang hồi…" : "";
+            progressFill.rectTransform.sizeDelta = new Vector2(1541 * Mathf.Clamp01(game.Farthest / Mathf.Max(1, level.EndX)), 3);
+            var boss = game.Boss;
+            bool inEncounter = boss && boss.Active;
+            bossBoard.gameObject.SetActive(inEncounter);
+            if (inEncounter)
+            {
+                bossCount.text = $"CÂY ĐA   ·   {boss.CalmedRoots} / {boss.RootCount} RỄ ĐÃ DỊU";
+                bossHint.text = boss.Hint;
+                for (int i = 0; i < bossBuds.Length; i++)
+                    bossBuds[i].color = i < boss.LitBuds ? gold : i == boss.LitBuds && boss.TargetOpen ? cream : rule;
+            }
+            string hint = inEncounter ? "" : level.HintAt(x);
+            promptBoard.gameObject.SetActive(!string.IsNullOrEmpty(hint));
+            prompt.text = hint;
+            introGroup.alpha = Mathf.Clamp01((game.Elapsed - .2f) * 3) * Mathf.Clamp01((3.3f - game.Elapsed) * 2);
+            introBoard.gameObject.SetActive(introGroup.alpha > .001f && toastTimer <= 0);
+        }
+
+        void UpdateHearts(float dt)
+        {
+            int health = Mathf.Clamp(game.Health, 0, hearts.Length);
+            if (previousHealth != health)
+            {
+                if (health < previousHealth) heartFlash = 1;
+                previousHealth = health;
+            }
+            healthCount.SetText("{0}/3", health);
+            heartFlash = Mathf.Max(0, heartFlash - dt * 3.3f);
+            for (int i = 0; i < hearts.Length; i++)
+            {
+                var icon = hearts[i];
+                icon.sprite = i < health ? heartFull : heartEmpty;
+                icon.rectTransform.localScale = Vector3.one * (i == health ? 1 + .15f * heartFlash : 1);
+            }
+        }
+
+        void LateUpdate()
+        {
+            if (HeartDisplayVisible) AlignVitals();
+        }
+
+        void AlignVitals()
+        {
+            float w = Mathf.Max(1, Screen.width), h = Mathf.Max(1, Screen.height);
+            Rect safe = Screen.safeArea;
+            if (safe.width < 1 || safe.height < 1) safe = new Rect(0, 0, w, h);
+            Vector2 corner = new Vector2(safe.xMin / w, safe.yMax / h);
+            lifeCard.anchorMin = lifeCard.anchorMax = corner;
+            // The card follows the actual Game View corner. A docked Editor view keeps a
+            // readable ~24x19px sprite even when menus have scaled to much smaller sizes.
+            float canvasScale = Mathf.Max(.01f, mainCanvas.scaleFactor);
+            float physicalScale = Mathf.Clamp(Mathf.Min(safe.width / 1600, safe.height / 900), .64f, 2.5f);
+            float scale = physicalScale / canvasScale;
+            lifeCard.localScale = new Vector3(scale, scale, 1);
+            lifeCard.anchoredPosition = new Vector2(Mathf.Round(24 * physicalScale) / canvasScale,
+                -Mathf.Round(20 * physicalScale) / canvasScale);
         }
 
         public void RefreshState()
         {
-            home.SetActive(game.State == GameState.Home); hud.SetActive(game.State == GameState.Playing || game.State == GameState.Respawning);
-            pause.SetActive(game.State == GameState.Paused); victory.SetActive(game.State == GameState.Complete);
-            tutorialScreen.SetActive(game.State == GameState.Tutorial);
-            if (game.Motes == 0) tokenFlash = 0;
-            if (game.State == GameState.Complete) result.text = $"{(int)game.Elapsed / 60:00}:{(int)game.Elapsed % 60:00}     •     {game.Motes} / {game.TotalMotes} đồng trăng     •     {game.Deaths} lần hồi sinh";
+            GameState state = game.State;
+            var original = lastState;
+            lastState = state;
+            bool changed = original != state;
+            if (changed) credits.SetActive(false);
+            if (state != GameState.Playing) toastGroup.alpha = 0;
+            if (state != GameState.Home) showingSplash = false;
+            matte.gameObject.SetActive(state == GameState.Home || state == GameState.Ending);
+            home.SetActive(state == GameState.Home);
+            hud.SetActive(state == GameState.Playing || state == GameState.Respawning);
+            bool showVitals = state == GameState.Playing || state == GameState.Respawning
+                || state == GameState.Tutorial || state == GameState.Paused || state == GameState.Defeat;
+            lifeCard.gameObject.SetActive(showVitals);
+            zone.gameObject.SetActive(state == GameState.Playing || state == GameState.Respawning);
+            if (showVitals)
+            {
+                AlignVitals();
+                UpdateHearts(0);
+            }
+            pause.SetActive(state == GameState.Paused);
+            victory.SetActive(state == GameState.Complete);
+            defeat.SetActive(state == GameState.Defeat);
+            ending.SetActive(state == GameState.Ending);
+            tutorialScreen.SetActive(state == GameState.Tutorial);
+            splash.SetActive(showingSplash && state == GameState.Home);
+            if (!changed && !(state == GameState.Playing && game.Elapsed == 0f)) return;
+            if (state == GameState.Home)
+            {
+                picker.SetActive(false);
+                homeContent.SetActive(true);
+                RefreshHome();
+                Select(showingSplash ? null : homePlay);
+            }
+            else if (state == GameState.Playing)
+            {
+                if (game.Elapsed < .1f)
+                {
+                    introName.text = game.LevelTitle;
+                    lifeChapter.text = $"MÀN {game.Chapter:00} / 04";
+                    previousHealth = game.Health;
+                    previousShards = shownMotes = shownCooldown = -1;
+                    toastTimer = tokenFlash = heartFlash = shardFlash = lanternFlash = 0;
+                }
+                Select(null);
+            }
+            else if (state == GameState.Paused)
+            {
+                pauseInfo.text = $"{game.LevelTitle}    ·    {TimeText()}";
+                Select(resume);
+            }
+            else if (state == GameState.Complete)
+            {
+                panelTime = 0;
+                victoryGroup.alpha = 0;
+                RefreshVictory();
+                Select(next);
+            }
+            else if (state == GameState.Defeat)
+            {
+                panelTime = 0;
+                defeatGroup.alpha = 0;
+                Select(retry);
+            }
+            else if (state == GameState.Ending) Select(endingHome);
+            else if (state == GameState.Tutorial) Select(tutorialContinue);
         }
-        public void TokenCollected() { tokenFlash = 1; }
-        public void ShowToast(string title, string description) { toastTitle.text = title; toastBody.text = description; toastTimer = 6; }
-        public void SetFade(float opacity) { fade.color = new Color(.01f, .035f, .07f, opacity); }
 
-        Image Panel(string name, Transform parent, Vector2 pos, Vector2 size, Color color)
+        public void TokenCollected() => tokenFlash = 1;
+        public void ShowToast(string title, string description)
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image)); go.transform.SetParent(parent, false);
-            var rect = go.GetComponent<RectTransform>(); rect.anchorMin = rect.anchorMax = new Vector2(0, 1); rect.pivot = new Vector2(0, 1); rect.anchoredPosition = new Vector2(pos.x, -pos.y); rect.sizeDelta = size;
-            var image = go.GetComponent<Image>(); image.color = color; image.raycastTarget = false; return image;
+            toastTitle.text = title;
+            toastBody.text = description;
+            toastTimer = 4;
         }
-        Image Bar(Transform p, float x, float y, float w, float h, Color c) => Panel("Accent", p, new Vector2(x, y), new Vector2(w, h), c);
-        Text Label(Transform parent, string value, float x, float y, float w, float h, int size, Color color, FontStyle style = FontStyle.Normal, TextAnchor align = TextAnchor.UpperLeft)
+        public void SetFade(float opacity) => fade.color = new Color(.014f,.026f,.057f,opacity);
+
+        string TimeText()
         {
-            var go = new GameObject("Text", typeof(RectTransform), typeof(Text)); go.transform.SetParent(parent, false);
-            var rect = go.GetComponent<RectTransform>(); rect.anchorMin = rect.anchorMax = new Vector2(0, 1); rect.pivot = new Vector2(0, 1); rect.anchoredPosition = new Vector2(x, -y); rect.sizeDelta = new Vector2(w, h);
-            var t = go.GetComponent<Text>(); t.font = game.art.uiFont; t.text = value; t.fontSize = size; t.color = color; t.fontStyle = style; t.alignment = align; t.raycastTarget = false;
-            t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow; return t;
+            int seconds = Mathf.Max(0, Mathf.FloorToInt(game.Elapsed));
+            return $"{seconds / 60:00}:{seconds % 60:00}";
         }
-        Button Button(Transform parent, string label, Vector2 pos, Vector2 size, UnityEngine.Events.UnityAction action, bool primary)
+
+        GameObject Layer(string name)
         {
-            var im = Panel(label, parent, pos, size, primary ? Visuals.Mint : new Color(.11f, .21f, .24f)); im.raycastTarget = true;
-            var b = im.gameObject.AddComponent<Button>(); b.targetGraphic = im;
-            var colors = b.colors; colors.highlightedColor = new Color(1.12f, 1.12f, 1.12f); colors.pressedColor = new Color(.72f, .85f, .83f); colors.fadeDuration = .12f; b.colors = colors;
-            b.onClick.AddListener(action);
-            Label(im.transform, label, 5, 0, size.x - 10, size.y, 18, primary ? new Color(.035f, .12f, .15f) : white, FontStyle.Bold, TextAnchor.MiddleCenter);
+            var r = new GameObject(name, typeof(RectTransform)).GetComponent<RectTransform>();
+            r.SetParent(root, false);
+            Stretch(r);
+            return r.gameObject;
+        }
+        static void Place(RectTransform rect, Transform parent, float x, float y, float w, float h)
+        {
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0,1);
+            rect.anchoredPosition = new Vector2(x,-y);
+            rect.sizeDelta = new Vector2(w,h);
+        }
+        static void Stretch(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+        }
+        Image Panel(string name, Transform p, float x, float y, float w, float h, Color c)
+        {
+            var image = new GameObject(name, typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            Place(image.rectTransform,p,x,y,w,h);
+            image.color = c;
+            image.raycastTarget = false;
+            return image;
+        }
+        Image Bar(Transform p, float x, float y, float w, float h, Color c) => Panel("Inlay", p,x,y,w,h,c);
+        MoonlitEmblem Emblem(Transform p, MoonlitEmblem.Shape shape, float x, float y, float w, float h, Color c)
+        {
+            var emblem = new GameObject(shape.ToString(), typeof(RectTransform), typeof(MoonlitEmblem)).GetComponent<MoonlitEmblem>();
+            Place(emblem.rectTransform,p,x,y,w,h);
+            emblem.Configure(shape);
+            emblem.color = c;
+            return emblem;
+        }
+        TMP_Text Label(Transform parent, string value, float x, float y, float w, float h, int size, Color c,
+            bool bold = false, TextAlignmentOptions align = TextAlignmentOptions.MidlineLeft, bool display = false)
+        {
+            var t = new GameObject(value.Length == 0 ? "Live text" : value, typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+            Place(t.rectTransform,parent,x,y,w,h);
+            t.font = display ? displayFont : interfaceFont;
+            t.text = value;
+            t.fontSize = size;
+            t.color = c;
+            t.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
+            t.alignment = align;
+            t.textWrappingMode = TextWrappingModes.Normal;
+            t.raycastTarget = false;
+            t.richText = false;
+            return t;
+        }
+        static void AddShadow(TMP_Text t)
+        {
+            t.outlineColor = new Color32(8,16,26,255);
+            t.outlineWidth = .2f;
+        }
+        Button Button(Transform parent, string title, float x, float y, float w, float h,
+            UnityEngine.Events.UnityAction clicked, bool primary)
+        {
+            var face = Panel(title, parent,x,y,w,h,Color.white);
+            face.raycastTarget = true;
+            var b = face.gameObject.AddComponent<Button>();
+            b.targetGraphic = face;
+            var palette = b.colors;
+            palette.normalColor = primary ? vermilion : new Color(.082f,.16f,.19f,.97f);
+            palette.selectedColor = palette.highlightedColor = primary ? new Color(.9f,.365f,.183f) : new Color(.2f,.31f,.32f);
+            palette.pressedColor = new Color(.46f,.24f,.13f);
+            palette.disabledColor = new Color(.085f,.115f,.135f);
+            palette.fadeDuration = .10f;
+            b.colors = palette;
+            if (primary) Bar(face.transform, 0,h-3,w,3,gold);
+            Label(face.transform,title,8,0,w-16,h,19,cream,true,TextAlignmentOptions.Center);
+            var focus = face.gameObject.AddComponent<MoonlitMenuFocus>();
+            focus.Configure(game, b, Bar(face.transform, 0,0,4,h,gold));
+            b.onClick.AddListener(() =>
+            {
+                buttonActivationFrame = Time.frameCount;
+                game.audioFx.PlayInteraction();
+                clicked();
+            });
             return b;
         }
-        static void Stretch(RectTransform r) { r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.offsetMin = r.offsetMax = Vector2.zero; }
+        static void Select(Button button)
+        {
+            var events = EventSystem.current;
+            if (events) events.SetSelectedGameObject(button ? button.gameObject : null);
+        }
+        void OnDestroy()
+        {
+            if (displayFont && displayFont != interfaceFont) Destroy(displayFont);
+        }
     }
 }

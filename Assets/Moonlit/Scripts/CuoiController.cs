@@ -20,15 +20,33 @@ namespace Moonlit
         public bool TestInput { get; set; }
         public float PulseReady => 1 - Cooldown / tuning.pulseCooldown;
         public int AnimationRow { get; private set; }
+        public int AnimationFrame { get; private set; }
+        public float MotionCycle => locomotion.Cycle;
+        public bool HasPlantedFoot => (AnimationRow == 1 || AnimationRow == 5) && locomotion.Planted;
+        public Vector2 PlantPosition => locomotion.Plant;
+        public Vector2 GripPosition => locomotion.Grip;
+        public Vector2 WallContact { get; private set; }
+        public bool IsWallHolding { get; private set; }
         public float PulseFlash => Mathf.Clamp01(pulsePose / .45f);
         public Vector2 LanternPosition => lanternGlow.transform.position;
         public float InputSuppressedUntil { get; private set; }
+        public bool IsClimbing { get; private set; }
+        public bool IsDashing => dashTime > 0;
+        public float DashReady => usedAirDash && !Grounded ? 0 : 1 - Mathf.Clamp01(dashRecharge / tuning.dashCooldown);
+        public int AirJumps { get; private set; }
+        public int Dashes { get; private set; }
+        public float ClimbDistance { get; private set; }
+        public event System.Action<Vector2, float> LanternPulsed;
 
         MoonlitGame game;
         Rigidbody2D rb;
-        float move, coyote, buffer, pulsePose, squash, stepTimer, airTime, detachTimer, stride;
-        bool jumpHeld, wasGrounded;
-        SpriteRenderer contactShadow;
+        float move, coyote, buffer, pulsePose, squash, airTime, detachTimer, previousClimbY, wallTop, mantleSettle;
+        bool jumpHeld, wasGrounded, cutJump, usedAirJump, usedAirDash;
+        float dashTime, dashRecharge, dashDirection, knockbackTime, trailTimer, pushBeat;
+        CuoiLocomotion locomotion;
+        CuoiFootShadow footShadow;
+        Material rimMaterial;
+        CuoiHandLantern handLantern;
         MovingPlatform support;
         bool standingOnTimber;
         readonly RaycastHit2D[] hits = new RaycastHit2D[12];
@@ -38,17 +56,26 @@ namespace Moonlit
             game = owner; tuning = game.tuning; rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0; rb.freezeRotation = true; rb.interpolation = RigidbodyInterpolation2D.Interpolate;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            var collider = GetComponent<CapsuleCollider2D>(); collider.size = new Vector2(.65f, 1.45f); collider.offset = new Vector2(0, .73f);
+            // The contact capsule sits inside the artwork and clears the corners of bamboo ledges.
+            var collider = GetComponent<CapsuleCollider2D>(); collider.size = new Vector2(.7f, 1.55f); collider.offset = new Vector2(0, .78f);
             collider.sharedMaterial = new PhysicsMaterial2D("Cuoi frictionless") { friction = 0, bounciness = 0 };
-            contactShadow = Visuals.Halo("Feet contact shadow", transform.position, 1, new Color(.01f, .025f, .02f, .65f), transform, 6);
-            contactShadow.transform.localPosition = new Vector3(0, -.06f, 0);
-            contactShadow.transform.localScale = new Vector3(.62f, .13f, 1);
+            footShadow = new CuoiFootShadow(transform);
+            var rim = Resources.Load<Shader>("CuoiRim");
+            if (rim && rim.isSupported)
+            {
+                rimMaterial = new Material(rim) { name = "Cuội • moon rim and amber key" };
+                body.sharedMaterial = rimMaterial;
+            }
+            lanternGlow.sortingOrder = body.sortingOrder - 1;
+            handLantern = new CuoiHandLantern(body);
+            locomotion = new CuoiLocomotion(body, rimMaterial);
         }
 
         void Update()
         {
             var kb = Keyboard.current;
             bool playing = game.State == GameState.Playing;
+            if (game.State == GameState.Paused || game.State == GameState.Tutorial) return;
             move = 0;
             if (playing && Time.unscaledTime >= InputSuppressedUntil)
             {
@@ -56,49 +83,77 @@ namespace Moonlit
                 else if (kb != null)
                 {
                     move = ((kb.dKey.isPressed || kb.rightArrowKey.isPressed) ? 1 : 0) - ((kb.aKey.isPressed || kb.leftArrowKey.isPressed) ? 1 : 0);
-                    jumpHeld = kb.spaceKey.isPressed || kb.wKey.isPressed || kb.upArrowKey.isPressed;
+                    bool holding = kb.spaceKey.isPressed || kb.wKey.isPressed || kb.upArrowKey.isPressed;
+                    if (jumpHeld && !holding) ReleaseJump();
+                    jumpHeld = holding;
                     if (kb.spaceKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame) QueueJump();
-                    if (kb.fKey.wasPressedThisFrame || kb.jKey.wasPressedThisFrame) Pulse();
+                    if (kb.fKey.wasPressedThisFrame || kb.jKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame) Pulse();
+                    if (kb.leftShiftKey.wasPressedThisFrame || kb.rightShiftKey.wasPressedThisFrame || kb.kKey.wasPressedThisFrame) Dash();
                     if (kb.eKey.wasPressedThisFrame) game.Interact();
                     if (kb.rKey.wasPressedThisFrame) game.Hurt(true);
                 }
+            }
+            if (playing)
+            {
+                float before = Cooldown;
                 Cooldown = Mathf.Max(0, Cooldown - Time.deltaTime);
+                if (before > 0 && Cooldown <= 0) game.audioFx.Play("ready");
                 Invulnerable = Mathf.Max(0, Invulnerable - Time.deltaTime);
             }
-            if (Mathf.Abs(move) > .01f) FacingRight = move > 0;
+            if (!IsDashing && Mathf.Abs(move) > .01f)
+                FacingRight = Grounded && Mathf.Abs(rb.linearVelocity.x) > .3f ? rb.linearVelocity.x > 0 : move > 0;
             pulsePose = Mathf.Max(0, pulsePose - Time.deltaTime);
             squash = Mathf.MoveTowards(squash, 0, Time.deltaTime * 4);
-            // AI idle frames do not register consistently. Keep one planted pose;
-            // breathing changes height very slightly around its fixed foot pivot.
             int row = 0, frame = 0;
             if (playing && !Grounded) { row = 2; frame = rb.linearVelocity.y > 4 ? 1 : rb.linearVelocity.y > -3 ? 2 : 3; }
-            else if (playing && Mathf.Abs(rb.linearVelocity.x) > .15f)
-            { stride += Mathf.Abs(rb.linearVelocity.x) * Time.deltaTime; row = 1; frame = (int)(stride / .58f) % 4; }
+            else if (playing && Mathf.Abs(rb.linearVelocity.x) > .15f) row = 1;
             if (pulsePose > 0) { row = 3; frame = Mathf.Clamp((int)((.45f - pulsePose) * 10), 0, 3); }
+            if (playing && IsClimbing) row = 4;
+            if (playing && mantleSettle > 0 && Grounded) row = 5;
+            if (playing && IsDashing) { row = 2; frame = 2; }
             AnimationRow = row;
-            body.sprite = game.art.Hero(row, frame); body.flipX = !FacingRight;
-            float breath = row == 0 ? Mathf.Sin(Time.time * 1.6f) * .003f : 0;
-            body.transform.localScale = new Vector3(1 + squash * .12f, 1 - squash * .10f + breath, 1);
-            // Moss covers only the lowest part of the feet; solid planks need almost no inset.
             float inset = Grounded ? (standingOnTimber ? .012f : tuning.feetInset) : 0;
-            body.transform.localPosition = new Vector3(0, -inset, 0);
-            contactShadow.enabled = Grounded || game.State == GameState.Home;
             body.color = Invulnerable > 0 && (int)(Time.time * 14) % 2 == 0 ? new Color(.75f, 1, 1, .45f) : Color.white;
-            lanternGlow.transform.localPosition = new Vector3(FacingRight ? .55f : -.55f, pulsePose > 0 ? 1.32f : .85f, 0);
+            if (row == 1 || row == 4 || row == 5)
+            {
+                if (row == 1) locomotion.Run(transform.position, FacingRight, support ? support.transform : null, Mathf.Min(.032f, inset));
+                else if (row == 5) locomotion.Mantle(transform.position, FacingRight, WallContact.x, wallTop, 3);
+                else locomotion.Climb(transform.position, FacingRight, WallContact.x, wallTop, IsWallHolding);
+                frame = locomotion.Frame;
+                lanternGlow.transform.position = handLantern.MotionPose(locomotion.Lantern, FacingRight, PulseFlash, MotionCycle, row >= 4, IsWallHolding);
+                if (locomotion.Strike)
+                {
+                    var at = row == 4 ? GripPosition : PlantPosition;
+                    game.effects.Burst(at, new Color(.53f, .54f, .38f, .58f), row == 4 ? 2 : 3, .6f);
+                    game.audioFx.Play(row == 4 ? "climb" : standingOnTimber ? "woodStep" : "step");
+                }
+            }
+            else
+            {
+                locomotion.Reset();
+                body.sprite = game.art.Hero(row, frame); body.flipX = !FacingRight;
+                float breath = row == 0 ? Mathf.Sin(Time.time * 1.6f) * .003f : 0;
+                body.transform.localScale = new Vector3(1 + squash * .07f + (IsDashing ? .12f : 0), 1 - squash * .06f + breath - (IsDashing ? .10f : 0), 1);
+                body.transform.localPosition = new Vector3(0, -inset, 0);
+                lanternGlow.transform.position = handLantern.Pose(row, frame, FacingRight, PulseFlash, Mathf.Abs(rb.linearVelocity.x));
+            }
+            AnimationFrame = frame;
             float glow = 5.3f + Mathf.Sin(Time.time * 2.8f) * .035f + pulsePose * 8;
             lanternGlow.transform.localScale = Vector3.one * glow;
-            if (playing && Grounded && Mathf.Abs(move) > .1f)
-            {
-                stepTimer += Time.deltaTime;
-                if (stepTimer > .18f) { stepTimer = 0; game.effects.Burst(transform.position + Vector3.up * .06f, new Color(.36f, .63f, .58f, .65f), 3, .7f); }
-            }
         }
+
+        void LateUpdate() { footShadow.Update(transform.position, FacingRight, HasPlantedFoot ? PlantPosition.x : transform.position.x); }
+        void OnDestroy() { if (rimMaterial) Destroy(rimMaterial); }
 
         void FixedUpdate()
         {
             if (game.State != GameState.Playing) { rb.linearVelocity = Vector2.zero; return; }
             float dt = Time.fixedDeltaTime;
+            mantleSettle = Mathf.Max(0, mantleSettle - dt);
             detachTimer = Mathf.Max(0, detachTimer - dt);
+            knockbackTime = Mathf.Max(0, knockbackTime - dt);
+            dashRecharge = Mathf.Max(0, dashRecharge - dt);
+            pushBeat = Mathf.Max(0, pushBeat - dt);
             var filter = new ContactFilter2D { useLayerMask = true, layerMask = 1 << 8, useTriggers = false };
             // Query the physics position, not the interpolated visual Transform.
             int count = Physics2D.BoxCast(rb.position + new Vector2(0, .20f), new Vector2(.52f, .10f), 0, Vector2.down, filter, hits, .34f);
@@ -120,6 +175,7 @@ namespace Moonlit
             if (Grounded)
             {
                 coyote = tuning.coyoteTime;
+                usedAirJump = usedAirDash = false;
                 if (!wasGrounded && airTime > .15f)
                 {
                     squash = 1; game.effects.Burst(transform.position, Visuals.Mint * new Color(1, 1, 1, .65f), 9, 1.7f);
@@ -130,7 +186,7 @@ namespace Moonlit
             else { coyote = Mathf.Max(0, coyote - dt); airTime += dt; }
             Vector2 velocity = rb.linearVelocity;
             float acceleration = Grounded ? (Mathf.Abs(move) < .01f ? tuning.groundDeceleration : tuning.groundAcceleration) : tuning.airAcceleration;
-            velocity.x = Mathf.MoveTowards(velocity.x, move * tuning.runSpeed, acceleration * dt);
+            if (knockbackTime <= 0) velocity.x = Mathf.MoveTowards(velocity.x, move * tuning.runSpeed, acceleration * dt);
             if (Grounded && floor)
             {
                 var surface = floor.GetComponent<PlatformSurface>(); standingOnTimber = surface && surface.timber;
@@ -144,16 +200,80 @@ namespace Moonlit
                     rb.position = new Vector2(rb.position.x + carry.x, targetFeet);
                 velocity.y = -1.2f;
             }
-            if (buffer > 0 && coyote > 0)
+            bool wasClimbing = IsClimbing;
+            if (wasClimbing) ClimbDistance += Mathf.Max(0, rb.position.y - previousClimbY);
+            previousClimbY = rb.position.y;
+            IsClimbing = IsWallHolding = false;
+            if (Mathf.Abs(move) > .01f && knockbackTime <= 0 && !IsDashing)
             {
-                velocity.y = tuning.jumpSpeed; buffer = 0; coyote = 0; Grounded = false; support = null;
-                detachTimer = .12f; squash = -.6f; Jumps++;
-                game.effects.Burst(transform.position, Visuals.Mint, 7, 1.6f); game.audioFx.Play("jump");
+                var direction = Vector2.right * Mathf.Sign(move);
+                var wall = Physics2D.Raycast(rb.position + Vector2.up * .20f, direction, .46f, 1 << 8);
+                if (!wall.collider || Mathf.Abs(wall.normal.x) < .65f)
+                    wall = Physics2D.Raycast(rb.position + Vector2.up * .80f, direction, .46f, 1 << 8);
+                if (wall.collider && Mathf.Abs(wall.normal.x) >= .65f)
+                {
+                    var crate = wall.collider.GetComponent<PushableCrate>();
+                    if (crate && Grounded && !crate.Docked)
+                    {
+                        crate.Push(direction.x); velocity.x = direction.x * 2;
+                        if (pushBeat <= 0) { game.audioFx.Play("crate"); pushBeat = .34f; }
+                    }
+                    else if (game.Chapter >= 3 && !Grounded && (jumpHeld || wasClimbing) && !crate && !wall.collider.usedByEffector &&
+                        wall.collider.bounds.size.y >= 2 && wall.collider.GetComponent<PlatformSurface>())
+                    {
+                        IsClimbing = true; IsWallHolding = !jumpHeld;
+                        WallContact = wall.point; wallTop = wall.collider.bounds.max.y; buffer = 0; cutJump = false;
+                        velocity.x = 0;
+                        float stroke = Mathf.Sin(MotionCycle * Mathf.PI * 4 - .55f);
+                        velocity.y = IsWallHolding ? 0 : tuning.climbSpeed * (.86f + .20f * stroke);
+                        if (!IsWallHolding && wallTop - rb.position.y < .34f)
+                        {
+                            // Commit the knee-over only when the far side supports a full
+                            // capsule and there is headroom. Low ceilings keep the wall hold.
+                            var landing = new Vector2(wall.point.x + direction.x * .44f, wallTop + .012f);
+                            var top = Physics2D.Raycast(landing + Vector2.up * .17f, Vector2.down, .27f, 1 << 8);
+                            bool space = !Physics2D.OverlapCapsule(landing + Vector2.up * .80f, new Vector2(.69f, 1.54f), CapsuleDirection2D.Vertical, 0, 1 << 8);
+                            if (top.collider && top.normal.y > .85f && space)
+                            {
+                                rb.position = landing; velocity = Vector2.zero; IsClimbing = false; Grounded = true;
+                                mantleSettle = .13f; airTime = 0; usedAirJump = usedAirDash = false;
+                            }
+                        }
+                    }
+                }
             }
-            if (!jumpHeld && velocity.y > 5) velocity.y = Mathf.MoveTowards(velocity.y, 5, 65 * Time.fixedDeltaTime);
+            bool airJump = !Grounded && coyote <= 0;
+            if (buffer > 0 && !IsClimbing && !IsDashing && knockbackTime <= 0 &&
+                (!airJump || (game.Chapter >= 2 && !usedAirJump)))
+            {
+                velocity.y = airJump ? tuning.airJumpSpeed : tuning.jumpSpeed;
+                if (airJump)
+                {
+                    usedAirJump = true; AirJumps++;
+                    game.effects.Ring(rb.position + Vector2.up * .1f, Visuals.Mint, 1.05f);
+                }
+                buffer = 0; coyote = 0; Grounded = false; support = null;
+                detachTimer = .12f; squash = -.6f; Jumps++;
+                game.effects.Burst(transform.position, Visuals.Mint, airJump ? 13 : 7, 1.6f);
+                game.audioFx.Play(airJump ? "airJump" : "jump");
+                cutJump = !jumpHeld;
+            }
+            if (cutJump && velocity.y > 0) velocity.y *= .5f;
+            cutJump = false;
             float gravity = tuning.gravity * (velocity.y < 0 ? tuning.fallMultiplier : 1);
-            velocity.y = Mathf.Max(velocity.y - gravity * Time.fixedDeltaTime, -tuning.maxFallSpeed);
+            if (!IsClimbing) velocity.y = Mathf.Max(velocity.y - gravity * dt, -tuning.maxFallSpeed);
             if (Grounded && velocity.y < 0) velocity.y = -1.2f;
+            if (IsDashing)
+            {
+                velocity = new Vector2(dashDirection * tuning.dashSpeed, 0);
+                dashTime = Mathf.Max(0, dashTime - dt); trailTimer -= dt;
+                if (trailTimer <= 0)
+                {
+                    game.effects.Burst(rb.position + Vector2.up * .75f - Vector2.right * dashDirection * .45f, Visuals.Mint, 6, 1.3f);
+                    trailTimer = .04f;
+                }
+                if (dashTime <= 0) velocity.x = dashDirection * tuning.runSpeed;
+            }
             if (rb.position.x < MoonlitLevel.LeftPlayerLimit)
             {
                 rb.position = new Vector2(MoonlitLevel.LeftPlayerLimit, rb.position.y);
@@ -167,10 +287,25 @@ namespace Moonlit
         }
 
         public void QueueJump(bool hold = true) { buffer = tuning.jumpBuffer; if (TestInput) jumpHeld = hold; }
-        public void ReleaseJump() { jumpHeld = false; }
+        public void ReleaseJump() { if (jumpHeld) cutJump = true; jumpHeld = false; }
+        public bool Dash()
+        {
+            if (game.State != GameState.Playing || game.Chapter < 4 || IsDashing || dashRecharge > 0 || knockbackTime > 0 || (usedAirDash && !Grounded)) return false;
+            dashDirection = Mathf.Abs(move) > .01f ? Mathf.Sign(move) : FacingRight ? 1 : -1;
+            FacingRight = dashDirection > 0; usedAirDash = !Grounded;
+            dashTime = tuning.dashDuration; dashRecharge = tuning.dashCooldown;
+            buffer = 0; trailTimer = 0; Dashes++; IsClimbing = false;
+            game.audioFx.Play("dash"); return true;
+        }
+        public void ApplyKnockback(float direction)
+        {
+            dashTime = 0; IsClimbing = false; Grounded = false; coyote = 0; buffer = 0; cutJump = false;
+            knockbackTime = .25f; detachTimer = .12f; Invulnerable = 1;
+            rb.linearVelocity = new Vector2(Mathf.Sign(direction) * 5, 6);
+        }
         public void ClearInput(float suppressSeconds = 0)
         {
-            buffer = 0; move = 0; jumpHeld = false;
+            buffer = 0; move = 0; jumpHeld = false; cutJump = false;
             InputSuppressedUntil = Time.unscaledTime + suppressSeconds;
         }
 
@@ -181,15 +316,19 @@ namespace Moonlit
             var at = (Vector2)transform.position + Vector2.up * .9f;
             game.effects.Ring(at, Visuals.Gold, tuning.pulseRadius); game.effects.Burst(at, Visuals.Gold, 30, 4);
             foreach (var e in game.enemies) if (Vector2.Distance(at, (Vector2)e.transform.position + Vector2.up * .4f) < tuning.pulseRadius) e.Stun(tuning.stunDuration);
+            game.level.PulseAt(at);
+            LanternPulsed?.Invoke(at, tuning.pulseRadius);
             game.cameraRig.Shake(.09f, .2f); game.audioFx.Play("pulse"); return true;
         }
 
         public void Teleport(Vector2 at)
         {
             rb.position = at; transform.position = at; rb.linearVelocity = Vector2.zero;
-            buffer = coyote = detachTimer = airTime = 0; wasGrounded = false; Grounded = false; support = null;
+            buffer = coyote = detachTimer = airTime = dashTime = dashRecharge = knockbackTime = mantleSettle = 0;
+            wasGrounded = Grounded = IsClimbing = IsWallHolding = usedAirJump = usedAirDash = cutJump = false; support = null;
+            locomotion.Reset();
             Physics2D.SyncTransforms();
         }
-        public void ResetRun() { Cooldown = 0; Jumps = Pulses = 0; Invulnerable = 0; }
+        public void ResetRun() { Cooldown = 0; Jumps = Pulses = AirJumps = Dashes = 0; ClimbDistance = 0; Invulnerable = 0; ClearInput(); }
     }
 }

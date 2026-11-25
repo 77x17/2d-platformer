@@ -1,0 +1,46 @@
+{
+    "build": "2.1.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "closed_bark_ignores_lantern",
+            "detail": "Rễ xung phong  ·  Lướt xuyên hoặc nhảy qua",
+            "passed": true
+        },
+        {
+            "name": "windup_freezes_on_pause",
+            "detail": "0.00",
+            "passed": true
+        },
+        {
+            "name": "charge_hits_once",
+            "detail": "stationary hearts=2",
+            "passed": true
+        },
+        {
+            "name": "missed_opening_rearms",
+            "detail": "Rễ xung phong  ·  Lướt xuyên hoặc nhảy qua",
+            "passed": true
+        },
+        {
+            "name": "arena_checkpoint_rearms",
+            "detail": "hearts=3",
+            "passed": true
+        },
+        {
+            "name": "entire_hill_to_ending",
+            "detail": "L4(115.9s,cp=6,falls=0,jumps=40,air=13,climb=18.0,dash=7)",
+            "passed": true
+        },
+        {
+            "name": "all_attacks_shown",
+            "detail": "tell-Charge, strike-Charge, open, tell-Slam, strike-Slam, tell-LowSweep, strike-LowSweep, tell-HighSweep, strike-HighSweep",
+            "passed": true
+        },
+        {
+            "name": "six_buds_and_ending",
+            "detail": "buds=6, minimum hearts=3",
+            "passed": true
+        }
+    ]
+}

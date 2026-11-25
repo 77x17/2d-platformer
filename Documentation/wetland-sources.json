@@ -1,0 +1,60 @@
+{
+  "asset": "Assets/Moonlit/Resources/WetlandPlants.png",
+  "generator": "OpenAI ImageGen, built-in",
+  "source": "Original transparent artwork for Cuội Tìm Trăng",
+  "generatedOn": "2026-11-24",
+  "masterSha256": "f3f149fcf09a450bbf13d172571a5a50cd14546e48e90c77b0a9189debabea4c",
+  "packedSha256": "7aa5d8951a0722f7c6c3bef16acdfcfe85fc0772ed25a968f7f32b2605ac4fe4",
+  "prompt": "Use case: 2D game sprite atlas on a genuine transparent background. A clean 3-column by 2-row grid of SIX separate original, distinct shoreline vegetation cutouts for a finely crafted Vietnamese pixel-art platformer. Uniform exact grid with generous gutter so every cell can be sliced separately. At every cell the subject base lies near the bottom of its own cell. Top left a dense fan of short irregular sedge and two tall slender cattails growing from a tiny mound of wet silt. Top middle is an asymmetric sparse arch of broad drooping water grass with a few rushes and muddy roots. Top right is an irregular sweep of golden-tipped reeds and short blue-green grass beside a single silt stone. Bottom left a low side view of overlapping round floating Vietnamese lotus pads in perspective with ONE restrained pink flower. Bottom middle is a loose group of four olive and deep teal floating lily pads at different angles and ONE closed ivory bud. Bottom right a subtle diagonal group of three water-chestnut leaf rosettes in pale and muted teal, each virtually flush with the surface. Style: richly drawn 16-bit pixel clusters, anatomically plausible firm clean silhouettes with delicate broken edges, printed Vietnamese folk palette of moonlit dusty olive, blue-green, muted violet shadows and amber tips. Atmospheric blue key light from upper left. Side scrolling camera orthographic side elevation with a shallow glimpse of upper leaf surfaces. Production game elements, cohesive, big legible shapes, a few tiny bright highlights only, no excessive small texture. All six objects fully contained in individual cells, roughly same width, with transparent air between them. No water, no ground platform, no ripple, no sky, no casting shadows, no pedestal, no UI, no frames, no gridlines, no text. True transparency, native canvas 3:2 landscape. One atlas.",
+  "slicing": {
+    "masterSize": [
+      1536,
+      1024
+    ],
+    "masterRectsTopLeft": [
+      [
+        43,
+        71,
+        411,
+        427
+      ],
+      [
+        537,
+        155,
+        451,
+        343
+      ],
+      [
+        1045,
+        79,
+        461,
+        425
+      ],
+      [
+        25,
+        687,
+        447,
+        235
+      ],
+      [
+        523,
+        655,
+        443,
+        247
+      ],
+      [
+        1037,
+        681,
+        469,
+        231
+      ]
+    ],
+    "atlasSize": [
+      384,
+      256
+    ],
+    "cellSize": 128,
+    "method": "Alpha-trim six cells, scale each to a maximum dimension of 118 pixels, anchor at its base, keep transparent outer padding. Upper row bank plants, lower row floating plants."
+  },
+  "runtime": "MoonlitWetland.cs scatters rooted species on low, solid shores and floating species in exposed water. RiverSurface.shader samples the active parallax bank in world space, modulates it by the water ripples, and receives the lantern lights used by the terrain."
+}

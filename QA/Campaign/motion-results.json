@@ -1,0 +1,41 @@
+{
+    "build": "2.0.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "run_pose_and_reversal",
+            "detail": "right=8.52u, left=7.80u, 8 rendered poses, 5.39 strides, 82 grounded samples",
+            "passed": true
+        },
+        {
+            "name": "run_stops_with_feet",
+            "detail": "stopped drift=0.000u, phase drift=0.000",
+            "passed": true
+        },
+        {
+            "name": "run_planted_sole",
+            "detail": "64 soles on terrain; max vertical gap=0.027u, horizontal slide during stance=0.000u",
+            "passed": true
+        },
+        {
+            "name": "climb_contact_and_crest",
+            "detail": "47 wall samples, 11 climbing sprites, ascent=5.20u, crested=True, missed wall/grip/cord=0/0/0",
+            "passed": true
+        },
+        {
+            "name": "climb_grip_holds_pose",
+            "detail": "18 held samples, body drift=0.000u, phase drift=0.000, resumed=True",
+            "passed": true
+        },
+        {
+            "name": "climb_hand_on_wall",
+            "detail": "36 hands on wall; max horizontal gap=0.000u, vertical grip slide=0.000u",
+            "passed": true
+        },
+        {
+            "name": "mantle_over_lip",
+            "detail": "observed pose mask=15/15, 4 planted pose samples, sole=(24.139, 6.415), touched upper bank=True",
+            "passed": true
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "OpenAI ImageGen, built-in image_gen",
+  "date": "2026-11-24",
+  "method": "Four independent original text-to-image generations, copied as PNG files. The planes in front of them use alpha sprites from the game. The city video supplied by the user was viewed to study relative screen movement; no frame was included in the artwork or the build.",
+  "images": [
+    {
+      "file": "Assets/Moonlit/Resources/Scenery1.png",
+      "chapter": 1,
+      "prompt": "Use case: stylized-concept. A panoramic 16:9 2D pixel art far-background plate for a side-scrolling Vietnamese folktale game. Exquisite hand-clustered pixels in a clean limited 32-color palette, atmospheric landscape, traditional Vietnamese lacquer scene with carefully simplified silhouettes, visually distinct depth layers. Horizon 56 percent down the image. Continuous landscape stretching from left to right, no border, no captions, no text, no UI, no character, no foreground platform, no black curtains. Moody but colorful, landmarks well-lit and distinguishable behind gameplay. A rural northern Vietnamese hamlet at mid-autumn, thatch cottages with flickering windows, a curved roof of a đình, bamboo fence and rice paddies, indigo and warm ochre; a broken sliver of moon low over distant hills."
+    },
+    {
+      "file": "Assets/Moonlit/Resources/Scenery2.png",
+      "chapter": 2,
+      "prompt": "Use case: stylized-concept. A panoramic 16:9 2D pixel art far-background plate for a side-scrolling Vietnamese folktale game. Exquisite hand-clustered pixels in a clean limited 32-color palette, atmospheric landscape, traditional Vietnamese lacquer scene with carefully simplified silhouettes, visually distinct depth layers. Horizon 56 percent down the image. Continuous landscape stretching from left to right, no border, no captions, no text, no UI, no character, no foreground platform, no black curtains. Moody but colorful, landmarks well-lit and distinguishable behind gameplay. A lush bamboo highland in Vietnam at night, many fine vertical jade stalks against layered karst silhouettes, open pools of luminous sea-green mist through the grove, jade and peacock blue."
+    },
+    {
+      "file": "Assets/Moonlit/Resources/Scenery3.png",
+      "chapter": 3,
+      "prompt": "Use case: stylized-concept. A panoramic 16:9 2D pixel art far-background plate for a side-scrolling Vietnamese folktale game. Exquisite hand-clustered pixels in a clean limited 32-color palette, atmospheric landscape, traditional Vietnamese lacquer scene with carefully simplified silhouettes, visually distinct depth layers. Horizon 56 percent down the image. Continuous landscape stretching from left to right, no border, no captions, no text, no UI, no character, no foreground platform, no black curtains. Moody but colorful, landmarks well-lit and distinguishable behind gameplay. A broad Vietnamese river in a mid-autumn night festival, small glowing silk and paper lanterns floating on the water, old wooden sampans, quiet waterfront houses, muted mulberry, blue indigo and coral amber."
+    },
+    {
+      "file": "Assets/Moonlit/Resources/Scenery4.png",
+      "chapter": 4,
+      "prompt": "Use case: stylized-concept. A panoramic 16:9 2D pixel art far-background plate for a side-scrolling Vietnamese folktale game. Exquisite hand-clustered pixels in a clean limited 32-color palette, atmospheric landscape, traditional Vietnamese lacquer scene with carefully simplified silhouettes, visually distinct depth layers. Horizon 56 percent down the image. Continuous landscape stretching from left to right, no border, no captions, no text, no UI, no character, no foreground platform, no black curtains. Moody but colorful, landmarks well-lit and distinguishable behind gameplay. An ancient windswept ridge above terraced Vietnamese hills, mist pooled like a sea, windswept dark banyans on far slopes, first light of dawn, slate violet, rose and apricot, no large foreground tree."
+    }
+  ]
+}

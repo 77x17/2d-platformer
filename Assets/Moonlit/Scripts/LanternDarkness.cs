@@ -13,6 +13,9 @@ namespace Moonlit
         Camera view;
         SpriteRenderer mask;
         Material material;
+        float ambient = .52f;
+        readonly Vector4[] lamps = new Vector4[4];
+        static readonly int LampPositions = Shader.PropertyToID("_VillageLights");
         static readonly int Center = Shader.PropertyToID("_LightCenter");
         static readonly int Radius = Shader.PropertyToID("_Radius");
         static readonly int Softness = Shader.PropertyToID("_Softness");
@@ -40,7 +43,16 @@ namespace Moonlit
             material.SetVector(Center, new Vector4(light.x, light.y, 0, 0));
             material.SetFloat(Radius, CurrentRadius);
             material.SetFloat(Softness, game.tuning.lightSoftEdge);
-            material.SetFloat("_Darkness", 1 - Mathf.Clamp01(game.tuning.ambientVisibility));
+            float playerX = game.player.Body.position.x;
+            float daylight = Mathf.Max(.50f, game.tuning.ambientVisibility);
+            if (game.Chapter == 1 && playerX >= 85 && playerX < 112) daylight = .31f;
+            else if (game.Chapter == 3) daylight = .58f;
+            else if (game.Chapter == 4) daylight = .46f;
+            ambient = Mathf.MoveTowards(ambient, daylight, Time.deltaTime * .48f);
+            material.SetFloat("_Darkness", 1 - ambient);
+            SceneLanternLight.NearCamera(p, lamps);
+            material.SetVectorArray(LampPositions, lamps);
+            Shader.SetGlobalVectorArray("_CuoiVillageLights", lamps);
             var tutorial = game.tutorials;
             material.SetFloat("_FocusBlend", tutorial ? tutorial.FocusAmount : 0);
             if (tutorial && tutorial.Active)

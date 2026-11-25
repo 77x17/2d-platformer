@@ -1,0 +1,103 @@
+Mono path[0] = 'D:/77x17/2d-platformer/2D Platformer/Builds/CuoiTimTrang-Windows/Cuoi_Data/Managed'
+Mono config path = 'D:/77x17/2d-platformer/2D Platformer/Builds/CuoiTimTrang-Windows/MonoBleedingEdge/etc'
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.3.16f1 (a56f230f6470)
+[Subsystems] Discovering subsystems at path D:/77x17/2d-platformer/2D Platformer/Builds/CuoiTimTrang-Windows/Cuoi_Data/UnitySubsystems
+Forcing GfxDevice: Direct3D 11
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce RTX 3060 (ID=0x2504)
+    Vendor:   NVIDIA
+    VRAM:     12115 MB
+    Driver:   32.0.16.1088
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.084 seconds
+- Finished resetting the current domain, in  0.002 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+UnloadTime: 0.361800 ms
+CAMPAIGN_QA home_enter PASS Playing
+CAMPAIGN_QA heart_images_full PASS filled=3/3, three slots ≥31px, viewport=1600×900
+CAMPAIGN_QA movement PASS (6.36, 0.00)
+CAMPAIGN_QA pause PASS Paused
+CAMPAIGN_QA chapter1_ability_gates PASS jumps=1
+CAMPAIGN_QA lamp PASS (61.50, 0.12)
+CAMPAIGN_QA fall_returns_to_lamp PASS (61.50, 0.00)
+CAMPAIGN_QA heart_images_after_fall PASS filled=2/2, three slots ≥31px, viewport=1600×900
+CAMPAIGN_QA pulse_stun_and_cooldown PASS cooldown=4
+CAMPAIGN_QA heart_images_one_left PASS filled=1/1, three slots ≥31px, viewport=1600×900
+CAMPAIGN_QA last_heart PASS Defeat
+CAMPAIGN_QA checkpoint_retry PASS Playing
+CAMPAIGN_QA heart_images_restored PASS filled=3/3, three slots ≥31px, viewport=1600×900
+CAMPAIGN_QA parallax_chapter_1 PASS camera +5: 0.200, 1.650, 3.150, 5.800
+CAMPAIGN_QA sky_coverage_1 PASS 1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9
+CAMPAIGN_QA parallax_ground_contact_1 PASS minimum bank depth below frame 0.31u
+CAMPAIGN_QA world_footings_1 PASS 54 planted props, 58 foot-to-ground raycasts
+CAMPAIGN_QA wildlife_habitats_1 PASS 1 fish, 0 crows, 1 matched visible water/branch and nearby firm bank
+CAMPAIGN_QA terrain_treads_1 PASS 40 tread meshes, 26 joined edges, 54 exposed edges
+CAMPAIGN_QA shard_1 PASS Complete
+CAMPAIGN_QA parallax_chapter_2 PASS camera +5: 0.200, 1.650, 3.150, 5.800
+CAMPAIGN_QA sky_coverage_2 PASS 1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9
+CAMPAIGN_QA parallax_ground_contact_2 PASS minimum bank depth below frame 0.31u
+CAMPAIGN_QA world_footings_2 PASS 123 planted props, 124 foot-to-ground raycasts
+CAMPAIGN_QA wildlife_habitats_2 PASS 0 fish, 2 crows, 2 matched visible water/branch and nearby firm bank
+CAMPAIGN_QA terrain_treads_2 PASS 33 tread meshes, 20 joined edges, 46 exposed edges
+CAMPAIGN_QA double_jump PASS apex sample (8.00, 4.51)
+CAMPAIGN_QA crow_warning_pulse PASS warned=True, flash=True, stuns=1, health=3
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+CAMPAIGN_QA crow_recovers_from_light PASS Resting
+CAMPAIGN_QA crow_attack_sequence PASS lead=1.05s, attacks=1, recovery=Returning, camera=True
+CAMPAIGN_QA crow_contact_once PASS damage events=1, hearts=3→2
+CAMPAIGN_QA shard_2 PASS Complete
+CAMPAIGN_QA parallax_chapter_3 PASS camera +5: 0.200, 1.650, 3.150, 5.800
+CAMPAIGN_QA sky_coverage_3 PASS 1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9
+CAMPAIGN_QA parallax_ground_contact_3 PASS minimum bank depth below frame 0.31u
+CAMPAIGN_QA world_footings_3 PASS 30 planted props, 32 foot-to-ground raycasts
+CAMPAIGN_QA wildlife_habitats_3 PASS 2 fish, 0 crows, 2 matched visible water/branch and nearby firm bank
+CAMPAIGN_QA terrain_treads_3 PASS 30 tread meshes, 24 joined edges, 36 exposed edges
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+CAMPAIGN_QA wall_climb PASS (24.46, 6.40)
+CAMPAIGN_QA shrine_bridge PASS lit
+CAMPAIGN_QA fish_warning_pulse PASS warned=True, flash=True, stuns=1, health=3
+CAMPAIGN_QA fish_recovers_from_light PASS Resting
+Curl error 35: Cert verify failed. Certificate could not be verified (either omitted or unsupported). UnityTls error code: 7
+CAMPAIGN_QA fish_attack_sequence PASS lead=0.90s, attacks=1, recovery=Returning, camera=True
+CAMPAIGN_QA fish_contact_once PASS damage events=1, hearts=3→2
+CAMPAIGN_QA shard_3 PASS Complete
+CAMPAIGN_QA parallax_chapter_4 PASS camera +5: 0.200, 1.650, 3.150, 5.800
+CAMPAIGN_QA sky_coverage_4 PASS 1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9
+CAMPAIGN_QA parallax_ground_contact_4 PASS minimum bank depth below frame 0.31u
+CAMPAIGN_QA world_footings_4 PASS 26 planted props, 27 foot-to-ground raycasts
+CAMPAIGN_QA wildlife_habitats_4 PASS 0 fish, 1 crows, 1 matched visible water/branch and nearby firm bank
+CAMPAIGN_QA terrain_treads_4 PASS 23 tread meshes, 12 joined edges, 34 exposed edges
+CAMPAIGN_QA dash PASS cooldown=0
+CAMPAIGN_QA shard_4 PASS Playing
+CAMPAIGN_QA continue_unlocked_chapter PASS Đồi Gốc Đa
+CAMPAIGN_QA replay_resets_chapter PASS Bờ Tre Làng Cuội
+CAMPAIGN_QA opposing_keys_cancel PASS (10.00, 0.00)
+CAMPAIGN_QA variable_jump PASS tap=1.20u hold=2.89u
+CAMPAIGN_QA coyote_at_paddy_edge PASS (6.00, 10.08)
+CAMPAIGN_QA buffered_landing_jump PASS (0.00, 7.68)
+CAMPAIGN_QA raft_carries_feet PASS rider drift 0.014u
+CAMPAIGN_QA contact_knockback_and_immunity PASS hearts=2 invulnerability=0.88
+CAMPAIGN_QA left_boundary PASS (1.28, 0.00)
+CAMPAIGN_QA run_pose_and_reversal PASS right=8.64u, left=7.80u, 8 rendered poses, 5.39 strides, 82 grounded samples
+CAMPAIGN_QA run_stops_with_feet PASS stopped drift=0.000u, phase drift=0.000
+CAMPAIGN_QA run_planted_sole PASS 64 soles on terrain; max vertical gap=0.027u, horizontal slide during stance=0.000u
+CAMPAIGN_QA climb_contact_and_crest PASS 47 wall samples, 11 climbing sprites, ascent=5.19u, crested=True, missed wall/grip/cord=0/0/0
+CAMPAIGN_QA climb_grip_holds_pose PASS 18 held samples, body drift=0.000u, phase drift=0.000, resumed=True
+CAMPAIGN_QA climb_hand_on_wall PASS 36 hands on wall; max horizontal gap=0.000u, vertical grip slide=0.000u
+CAMPAIGN_QA mantle_over_lip PASS observed pose mask=15/15, 4 planted pose samples, sole=(24.139, 6.415), touched upper bank=True
+CAMPAIGN_QA_DONE True
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.

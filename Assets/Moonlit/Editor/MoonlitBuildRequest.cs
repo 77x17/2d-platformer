@@ -19,9 +19,22 @@ namespace Moonlit.Editor
             if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlayingOrWillChangePlaymode || BuildPipeline.isBuildingPlayer) return;
             const string request = "QA/build.request";
             if (!File.Exists(request)) return;
-            string command = File.ReadAllText(request).Trim(); File.Delete(request);
-            if (command != "build-windows") return;
-            try { LevelOneBuilder.Build(); }
+            string command = File.ReadAllText(request).Trim();
+            if (command == "build-windows")
+            {
+                // Auto-refresh normally runs when a user focuses the editor. A queued build must
+                // also pick up disk changes when the editor is in the background or the PC is locked.
+                File.WriteAllText(request, "build-after-import");
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                return;
+            }
+            File.Delete(request);
+            if (command != "build-after-import") return;
+            try
+            {
+                if (EditorUtility.scriptCompilationFailed) throw new InvalidOperationException("Fix the project compilation errors before building.");
+                LevelOneBuilder.Build();
+            }
             catch (Exception ex) { File.WriteAllText("QA/build-result.txt", "FAILED\n" + ex); Debug.LogException(ex); }
         }
     }

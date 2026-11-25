@@ -12,18 +12,18 @@ namespace Moonlit
         float lastPush = -1;
         void Awake()
         {
-            Body = GetComponent<Rigidbody2D>(); Body.mass = 3; Body.gravityScale = 3;
+            Body = GetComponent<Rigidbody2D>(); origin = Body.position; Body.mass = 3; Body.gravityScale = 3;
             Body.constraints = RigidbodyConstraints2D.FreezeRotation;
             Body.interpolation = RigidbodyInterpolation2D.Interpolate;
             Body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             var box = GetComponent<BoxCollider2D>(); box.size = new Vector2(1.32f, 1.32f);
             box.sharedMaterial = new PhysicsMaterial2D("Crate grip") { friction = .45f, bounciness = 0 };
         }
-        void Start() { origin = Body.position; }
+
         public void Push(float direction)
         {
             if (Docked || MoonlitGame.Instance.State != GameState.Playing) return;
-            lastPush = Time.fixedTime; Body.linearVelocity = new Vector2(direction * 2.5f, Body.linearVelocity.y);
+            lastPush = Time.fixedTime; Body.linearVelocity = new Vector2(direction * 2f, Body.linearVelocity.y);
         }
         void FixedUpdate()
         {

@@ -5,43 +5,87 @@ namespace Moonlit
 {
     public sealed class MoonlitAudio : MonoBehaviour
     {
+        public const float InteractionDuration = .10f;
+        const string MutePreference = "Moonlit.AudioMuted";
+        static readonly string[] ChapterMusic = { "mus_home", "mus_village", "mus_bamboo", "mus_river", "mus_hill" };
         readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
-        AudioSource source, ambience;
+        readonly AudioSource[] music = new AudioSource[2];
+        AudioSource effects;
+        int current, interactionFrame = -1;
+        string theme;
+        internal event System.Action<string> SoundPlayed;
         public bool Muted { get; private set; }
+
         void Awake()
         {
-            source = gameObject.AddComponent<AudioSource>(); source.volume = .23f;
-            clips["jump"] = Tone(340, 680, .16f);
-            clips["land"] = Tone(110, 55, .10f);
-            clips["pulse"] = Tone(220, 880, .55f);
-            clips["collect"] = Tone(740, 1100, .24f);
-            clips["checkpoint"] = Tone(440, 880, .8f);
-            clips["hurt"] = Tone(180, 60, .35f);
-            clips["win"] = Tone(520, 1040, 1.6f);
-            ambience = gameObject.AddComponent<AudioSource>(); ambience.clip = Ambient(); ambience.volume = .055f; ambience.loop = true; ambience.Play();
-        }
-        public void Play(string sound) { if (!Muted && clips.TryGetValue(sound, out var c)) source.PlayOneShot(c); }
-        public void Toggle() { Muted = !Muted; ambience.mute = Muted; source.mute = Muted; }
-        AudioClip Tone(float low, float high, float duration)
-        {
-            const int rate = 22050; int count = (int)(rate * duration); var data = new float[count]; float phase = 0;
-            for (int i = 0; i < count; i++)
+            foreach (var clip in Resources.LoadAll<AudioClip>("MoonAudio")) clips[clip.name] = clip;
+            effects = gameObject.AddComponent<AudioSource>();
+            effects.playOnAwake = false;
+            effects.volume = .53f;
+            for (int i = 0; i < music.Length; i++)
             {
-                float t = i / (float)count; phase += Mathf.Lerp(low, high, t) * Mathf.PI * 2 / rate;
-                data[i] = (Mathf.Sin(phase) + .18f * Mathf.Sin(phase * 2)) * Mathf.Sin(Mathf.PI * Mathf.Min(t * 10, 1) * .5f) * Mathf.Pow(1 - t, 2) * .5f;
+                music[i] = gameObject.AddComponent<AudioSource>();
+                music[i].playOnAwake = false;
+                music[i].loop = true;
+                music[i].volume = 0;
             }
-            var clip = AudioClip.Create("Synth " + low, count, 1, rate, false); clip.SetData(data, 0); return clip;
+            SetMute(PlayerPrefs.GetInt(MutePreference, 0) == 1);
         }
-        AudioClip Ambient()
+
+        void Update()
         {
-            const int rate = 22050, duration = 16; var data = new float[rate * duration];
-            for (int i = 0; i < data.Length; i++)
+            var game = MoonlitGame.Instance;
+            if (!game) return;
+            string next = game.State == GameState.Home ? ChapterMusic[0] :
+                game.Boss && game.Boss.Active ? "mus_guardian" : ChapterMusic[Mathf.Clamp(game.Chapter, 1, 4)];
+            if (theme != next && clips.TryGetValue(next, out var nextClip))
             {
-                float t = i / (float)rate;
-                data[i] = (Mathf.Sin(t * Mathf.PI * 2 * 110) * .34f + Mathf.Sin(t * Mathf.PI * 2 * 165) * .2f + Mathf.Sin(t * Mathf.PI * 2 * 220) * .1f)
-                    * (.6f + .4f * Mathf.Sin(t * Mathf.PI * 2 / duration));
+                current = 1 - current;
+                music[current].clip = nextClip;
+                music[current].volume = 0;
+                music[current].Play();
+                theme = next;
             }
-            var clip = AudioClip.Create("Forest drone - synthesized", data.Length, 1, rate, false); clip.SetData(data, 0); return clip;
+            float volume = game.State == GameState.Home || game.State == GameState.Playing ? .35f :
+                game.State == GameState.Paused || game.State == GameState.Tutorial ? .14f : .045f;
+            for (int i = 0; i < music.Length; i++)
+            {
+                var source = music[i];
+                source.volume = Mathf.MoveTowards(source.volume, current == i ? volume : 0, Time.unscaledDeltaTime * .55f);
+                if (i != current && source.volume <= 0 && source.isPlaying) source.Stop();
+            }
+        }
+
+        public void Play(string sound)
+        {
+            if (Muted) return;
+            string prefix = sound == "win" || sound == "lose" ? "jingle_" : "sfx_";
+            if (clips.TryGetValue(prefix + sound, out var clip))
+            {
+                effects.PlayOneShot(clip);
+                SoundPlayed?.Invoke(sound);
+            }
+        }
+
+        public void PlayInteraction()
+        {
+            if (Muted || interactionFrame == Time.frameCount) return;
+            interactionFrame = Time.frameCount;
+            Play("uiClick");
+        }
+
+        public void Toggle()
+        {
+            SetMute(!Muted);
+            try { PlayerPrefs.SetInt(MutePreference, Muted ? 1 : 0); PlayerPrefs.Save(); }
+            catch (PlayerPrefsException) { Debug.LogWarning("Could not save audio preference for this user."); }
+        }
+
+        void SetMute(bool value)
+        {
+            Muted = value;
+            effects.mute = value;
+            foreach (var source in music) source.mute = value;
         }
     }
 }

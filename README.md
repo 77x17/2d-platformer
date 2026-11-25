@@ -1,76 +1,43 @@
-# Cuội — Đường Về Trăng
+# Cuội Tìm Trăng
 
-Một màn platformer 2D cuộn ngang trong Unity **6000.3.16f1**. Chạy, nhảy, tránh thú rừng và tương tác môi trường; không có vũ khí, chặt chém hay hệ thống gây sát thương cho quái.
+Game platformer 2D tiếng Việt trên Windows x64. Cuội mang đèn ông sao qua bốn miền để nhặt lại bốn mảnh trăng và giúp cây đa trở về Cung Trăng. Ngoài chó canh và mèo rình trên cao, Cuội còn gặp cá chép bật khỏi mặt nước và quạ sà xuống từ cành. Có thể đọc dấu hiệu rồi né, hoặc bùng đèn để làm choáng. Ở hồi cuối, Cuội né Cây Đa xông ngang, đọc nhịp quét rễ, nhảy qua sóng đất rồi thắp từng nụ trên thân.
 
-## Chạy game
+## Chơi bản Windows
 
-- **Code mới 19/11:** Play trong Unity để thử đồng trăng vàng, vùng tối giữ sáng 30%, texture platform mới và lớp rêu chỉ che chân. Asset tự import sau compile; có thể chạy menu **Moonlit → 4 - Import readable tokens and platform surfaces**. Chi tiết: `Documentation/READABILITY_POLISH.md`. Lần cập nhật này không build `.exe`.
-- Bản `.exe` gần nhất: `Builds/Windows-Refined/Cuoi.exe` (18/11, chưa có thay đổi 19/11). Giữ nguyên toàn bộ thư mục Windows-Refined cạnh file exe.
-- Unity: mở `Assets/Moonlit/Scenes/Level01_BanyanForest.unity`, nhấn Play.
-- Nếu cần khởi tạo lại: menu **Moonlit → 1 - Create or refresh level 1**. Lệnh này tái tạo scene bootstrap và cắt lại atlas AI; không chạy sau khi đã tùy chỉnh scene nếu chưa lưu bản riêng.
-- Build: **Moonlit → 2 - Build Windows executable**. Build bình thường giữ art library / tuning hiện có.
-- Menu build vẫn xuất vào `Builds/Windows`; đóng player ở thư mục đó trước khi build. `Windows-Refined` là snapshot bàn giao; `Windows-Polish` là bản cũ còn puzzle thùng.
+Mở `Builds/CuoiTimTrang-Windows/Cuoi.exe` hoặc giải nén trọn bộ `Builds/CuoiTimTrang-2.1.0-Windows-x64.zip` rồi chạy `Cuoi.exe`. Giữ các thư mục dữ liệu và DLL cạnh file thực thi. Từ trang chủ có thể bắt đầu, tiếp tục hoặc chọn lại các màn đã mở. Tiến độ mở màn được lưu trên máy sau khi qua từng màn. Khi thua trong một màn, có thể chơi tiếp ở cột đèn gần nhất.
 
-| Phím | Thao tác |
+| Màn | Đặc trưng | Phần thưởng |
+|---|---|---|
+| 1 · Bờ Tre Làng Cuội | Qua mương trên bó tre, né chó mèo, đẩy thùng lên tường đất và đợi bè. Sau hai cột đèn ở ô 60 và 140, đường làng dẫn qua bờ ruộng, ngõ lò gốm, bến vó rồi trở về sân lễ bên hồ. | Mảnh 1 mở Nhảy đôi |
+| 2 · Rừng Trúc | Bật nhảy lần hai để lên tán trúc, theo các gầu nâng ở guồng nước rồi vượt nhịp ván mục lên am cổ. | Mảnh 2 mở Leo tường |
+| 3 · Sông Đèn | Leo bờ kè, theo bè qua dòng hoa đăng, đánh thức miếu và thắp ba đèn rước ở bến sông để mở cầu. | Mảnh 3 mở Lướt |
+| 4 · Đồi Gốc Đa | Phối hợp ba kỹ năng qua khe gió, thắp cột đèn và vượt sống đá gãy. Sau mảnh cuối, lướt xuyên cú xông, nhảy qua rễ thấp, đứng dưới nhánh cao và tránh hai sóng đất. Khi cây nghỉ, rọi đèn vào mầm vàng. | Mảnh 4 và đoạn kết |
+
+## Điều khiển
+
+| Phím | Hành động |
 |---|---|
-| A / D hoặc ← / → | Chạy trái / phải |
-| Space, W hoặc ↑ | Nhảy; giữ để nhảy cao, nhả để nhảy thấp |
-| F hoặc J | Lồng đèn bừng sáng, làm choáng quái trong 2,6 giây; hồi 3 giây |
-| E | Thắp đèn ở miếu cạnh cây cầu bị ngắt |
-| Esc | Tạm dừng / tiếp tục |
-| R | Hồi sinh tại đèn gần nhất |
-| M | Bật / tắt âm thanh |
-| Enter | Bắt đầu / tiếp tục / chơi lại tùy màn hình |
-| Enter / Space hoặc nút Đã hiểu | Đóng tutorial sau khi đọc, trả camera về Cuội |
+| A / D hoặc ← / → | Chạy, đẩy thùng khi chạm thùng |
+| Space, W hoặc ↑ | Nhảy. Giữ để nhảy cao, nhả sớm để nhảy thấp. Từ màn 2, bấm lần nữa khi trên không. |
+| Giữ hướng vào vách và giữ phím nhảy | Leo từ màn 3. Nhả phím nhảy trong khi vẫn giữ hướng vào vách để bám tại chỗ. Giữ nhảy tiếp để trèo qua mép. |
+| Shift hoặc K | Lướt từ màn 4 |
+| J, X hoặc F | Bùng sáng lồng đèn. Hồi trong 4 giây. |
+| E | Thắp miếu ở màn Sông Đèn. Đèn bùng sáng gần miếu cũng mở cầu. |
+| Esc · M | Tạm dừng / tiếp tục · bật / tắt âm thanh |
+| ↑ / ↓ và Enter, hoặc chuột | Chọn và kích hoạt nút trên menu |
 
-## Nội dung đã triển khai
+## Project Unity
 
-- Cuội có idle / run / jump / lantern, mỗi hàng atlas 4 frame.
-- Hai loại thú rừng: chó tuần tra rồi lao tới; mèo báo trước rồi vồ. Cả hai có idle / walk / pounce / stunned, không bị giết.
-- 1 tuyến đường 370 world units, nhiều cao độ; 5 checkpoint, 2 bệ gỗ nâng dọc có dây treo, 5 bệ sụp tự phục hồi, cầu tương tác, 40 đốm trăng tùy chọn và 1 mảnh trăng kết màn.
-- 6 tutorial spotlight: gameplay dừng, camera focus đối tượng, vùng khác tối, người chơi tự xác nhận khi đọc xong.
-- Animation môi trường: dây leo / tre / lá / đèn lắc, đom đóm trôi và nhấp nháy, mảnh trăng bob/rotate.
-- Polish: coyote time, jump buffer, gia tốc/giảm tốc, variable jump, squash khi nhảy/tiếp đất, bụi chân, vòng sáng, hạt sáng, camera follow/lookahead/shake, fade hồi sinh và âm thanh tổng hợp nhẹ.
-- Idle dùng pose ổn định và nhịp thở nhẹ; chân lún 0.065 unit trên rêu, 0.012 trên gỗ; rêu tiền cảnh chỉ che bàn chân; contact shadow; animation chạy theo quãng đường; nhả phím dừng nhanh. Biên trái chặn vật lý, không gây chết.
-- Home, logo chữ, Play, HUD, pause, kết màn; text tiếng Việt.
+Mở bằng Unity **6000.3.16f1**, chọn scene `Assets/Moonlit/Scenes/Level01_BanyanForest.unity` rồi nhấn Play. Đây là scene khởi động cho cả bốn màn. `MoonlitGame` quản lý tiến độ, `MoonlitLevel` dựng địa hình từng chương, `CuoiController` xử lý vận động và `BanyanGuardian` điều khiển đoạn gặp Cây Đa. Thông số vận động nằm ở `Assets/Moonlit/Settings/PlayerTuning.asset`.
 
-## Điểm sửa dành cho programmer
+Camera dùng bốn lớp ngang. Chân trời trượt 0,04 lần quãng đường camera trên một bức toàn cảnh duy nhất của mỗi màn. Cảnh giữa trượt 0,33 lần, bờ gần 0,63 lần và lá tiền cảnh 1,16 lần. Mặt đất và vật thể tương tác đứng trong thế giới ở tỉ lệ 1. Mặt nước phản chiếu dải bờ đang nhìn thấy và những ngọn đèn ở gần. [Nguồn ảnh và prompt](Documentation/campaign-scenery-sources.json)
 
-| Muốn sửa | File / asset |
-|---|---|
-| Tốc độ, jump, gravity, thời gian choáng | `Assets/Moonlit/Settings/PlayerTuning.asset` |
-| Thay ảnh / frame | `Assets/Moonlit/Settings/ArtLibrary.asset` |
-| Bố cục màn, tọa độ và encounter | `Assets/Moonlit/Scripts/MoonlitLevel.cs` |
-| Controller / nhảy / lantern | `Assets/Moonlit/Scripts/CuoiController.cs` |
-| Hành vi chó / mèo | `Assets/Moonlit/Scripts/ForestCreature.cs` |
-| Bệ, cầu, checkpoint, pickup | `Assets/Moonlit/Scripts/ForestMechanisms.cs` |
-| Tutorial và nội dung hướng dẫn | `Assets/Moonlit/Scripts/MoonlitTutorial.cs` |
-| Dây neo bệ nâng | `Assets/Moonlit/Scripts/LiftSuspension.cs` |
-| Bóng tối quanh đèn | `Assets/Moonlit/Resources/LanternDarkness.shader`, `Scripts/LanternDarkness.cs` |
-| Gió và nền cuộn | `Assets/Moonlit/Scripts/ForestWind.cs`, `MoonlitCamera.cs` |
-| UI / typography / nội dung | `Assets/Moonlit/Scripts/MoonlitHud.cs` |
-| Sprite slicing / build | `Assets/Moonlit/Editor/LevelOneBuilder.cs` |
+Cuội có tám tư thế chạy, tám tư thế leo và bốn tư thế chống tay qua mép. Tốc độ đổi chân phụ thuộc vào quãng đường thực đi trên mặt đang đỡ Cuội. Phần piano phối từ **Trống quân** của Bắc Bộ và **Đi cấy** trong tổ khúc múa đèn Đông Anh, Thanh Hóa. [Nguồn sprite chuyển động](Documentation/CUOI_ANIMATION_CREDITS.md) · [Bản ký âm và bản phối](Documentation/FESTIVAL_PIANO.md)
 
-Scene hiện dùng bootstrap để tạo hierarchy lúc Play. Các thông số art và controller là ScriptableObject; layout nằm trong code có chia 4 đoạn rõ ràng. Có thể chuyển các nhóm runtime thành prefab/tilemap ở bước tiếp theo. Không thay scene mẫu gốc `Assets/Scenes/SampleScene.unity`.
+Khi Editor đã đóng, chạy `Tools/Build-Game.ps1` từ PowerShell để build. Nếu Editor đang mở, dùng **Assets → Refresh**, đợi biên dịch xong rồi chọn **Moonlit → 2 - Build Windows executable**. Bản build xuất vào `Builds/CuoiTimTrang-Windows`. Chạy `Tools/Package-Game.ps1` để thêm giấy phép, ghi công và tạo file ZIP phát hành. [Nguồn mỹ thuật, âm thanh và phông chữ](CREDITS.md)
 
-## Phạm vi và lưu ý
+## Kiểm thử
 
-Chỉ màn 1 được làm. Chưa có intro hoặc màn 2–4. Nhận mảnh trăng lưu cờ `Moonlit.WallClimbUnlocked` cho màn 2; **chưa triển khai cơ chế bám/leo vách** trong màn 1. Thời lượng thiết kế khoảng 90–150 giây cho người chơi lần đầu, cần lấy mẫu playtest người thật để chốt mốc 2 phút.
+Trận Cây Đa có một lượt kiểm riêng đi từ đầu Đồi Gốc Đa đến đoạn kết và bài tập đứng yên chịu đòn. Dùng `-moonlitGuardianQA` để chạy lại. [Cách đọc các đòn và nguồn sprite](Documentation/BANYAN_DUEL.md) · [Kiểm thử trận mới](QA/Guardian/VERIFICATION.md)
 
-Ánh sáng dùng shader radial mask giữ 30% màu môi trường ngoài đèn (tutorial vẫn tối hoàn toàn ngoài spotlight), kết hợp glow/ripple; chưa tính bóng đổ sau vật cản. Background dùng 3 tile từ ảnh rừng AI, cuộn ngang liên tục và parallax theo camera; các lớp cây/dây leo/lá nhận sự kiện gió riêng. Âm thanh là clip tổng hợp bằng code, không dùng nhạc tải từ bên thứ ba.
-
-## Kiểm tra
-
-`Cuoi.exe -batchmode -moonlitQA -force-d3d11 -screen-width 1600 -screen-height 900 -logFile "<đường dẫn log>"` chạy các kiểm tra tích hợp trong build bằng Input System, cùng controller và Physics2D. Fixture dùng teleport để cô lập từng cơ chế. Thay `-moonlitQA` bằng `-moonlitRouteQA` để chạy một lượt từ đầu đến cuối bằng điều khiển bình thường, không teleport hoặc bất tử. Báo cáo JSON và ảnh camera nằm trong `Builds/QA/` (hai cấp trên `Cuoi_Data`). Chế độ bình thường không bật QA.
-
-Các bộ kiểm tra hiện tại: `-moonlitQA` (18 kiểm tra), `-moonlitPolishQA` (18 kiểm tra sau khi gỡ thùng), `-moonlitRevisionQA` (22 kiểm tra tutorial/idle/biên trái), `-moonlitRouteQA` (đi liên tục qua đủ 6 tutorial). Xem kết quả bản mới tại `QA/REFINED_VERIFICATION.md`. Bot biết sẵn đường nên thời gian route không đại diện thời lượng người chơi mới. Các file `POLISH_VERIFICATION.md` và `VERIFICATION.md` là lịch sử phiên bản trước.
-
-Package skeletal animation `com.unity.2d.animation` không được dùng bởi animator đổi frame của game này và đã bỏ khỏi manifest; package cũ cấp một GPU fallback buffer dù không có SpriteSkin. Nếu bạn muốn chuyển sang animation xương, có thể cài lại package tương thích từ Package Manager.
-
-Xem `Documentation/LEVEL_DESIGN.md` cho ý tưởng 4 màn và `Documentation/ASSETS.md` cho hợp đồng thay asset. Các API vật lý được đối chiếu với [Unity Rigidbody2D](https://docs.unity.com/en-us/engine/6000.0/script-reference/unityengine/rigidbody2d).
-## Bản Refined 18/11
-
-Quay về atlas môi trường gốc để thống nhất đá/rêu/gỗ. Gỡ puzzle thùng, giảm bệ động còn 2 bệ treo có điểm neo rõ; tuyến đầu trở lại bậc rêu. Hướng dẫn quan trọng có spotlight và tạm dừng; sửa rung idle, cảm giác chân và biên trái.
-
-Thiết kế và kỹ thuật hiện tại: [Documentation/DESIGN_REVISION.md](Documentation/DESIGN_REVISION.md). Thuật ngữ coyote time/jump buffering dùng trong báo cáo: [Documentation/POLISH_REPORT.md](Documentation/POLISH_REPORT.md).
-
+Bản Windows nhận `-moonlitCampaignQA` để chạy kiểm tra tích hợp và một lượt xuyên bốn màn, hoặc `-moonlitRouteQA` để chỉ chạy tuyến chơi liên tục. Báo cáo và ảnh camera được ghi vào `QA/Campaign` của project khi chạy từ đường dẫn build ở trên. Chế độ QA dùng tiến độ độc lập với bản chơi thường. [Kết quả và giới hạn kiểm thử](QA/Campaign/VERIFICATION.md)

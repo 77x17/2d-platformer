@@ -41,7 +41,7 @@ namespace Moonlit.Editor
             var root = new GameObject("CUOI - Level 01 bootstrap (settings below)"); var game = root.AddComponent<MoonlitGame>(); game.art = art; game.tuning = tuning;
             EditorSceneManager.SaveScene(scene, Root + "Scenes/Level01_BanyanForest.unity");
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(Root + "Scenes/Level01_BanyanForest.unity", true) };
-            PlayerSettings.companyName = "Moonlit Studio"; PlayerSettings.productName = "Cuoi - Duong Ve Trang";
+            PlayerSettings.companyName = "Moonlit Studio"; PlayerSettings.productName = "Cuội Tìm Trăng";
             PlayerSettings.defaultScreenWidth = 1600; PlayerSettings.defaultScreenHeight = 900;
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed; PlayerSettings.resizableWindow = true; PlayerSettings.runInBackground = true;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
@@ -169,16 +169,15 @@ namespace Moonlit.Editor
             return AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().OrderBy(s => s.name).ToArray();
         }
 
-        [MenuItem("Moonlit/4 - Import readable tokens and platform surfaces")]
+        [MenuItem("Moonlit/4 - Import platform surfaces")]
         public static void PrepareReadabilityAssets()
         {
             var art = AssetDatabase.LoadAssetAtPath<MoonlitArt>(Root + "Settings/ArtLibrary.asset");
             if (!art) return;
-            if (!art.moonToken) art.moonToken = ImportReadableSprites("MoonToken", 1, 1, false)[0];
             if (art.mossPlatforms == null || art.mossPlatforms.Length != 4 || art.mossPlatforms.Any(s => !s))
                 art.mossPlatforms = ImportReadableSprites("MossPlatforms", 2, 2, true);
             EditorUtility.SetDirty(art); AssetDatabase.SaveAssets();
-            Debug.Log("MOONLIT_READABILITY_READY: Moon token + four registered moss surfaces imported. No player build requested.");
+            Debug.Log("MOONLIT_READABILITY_READY: Four registered moss surfaces imported.");
         }
 
         [MenuItem("Moonlit/2 - Build Windows executable")]
@@ -186,17 +185,17 @@ namespace Moonlit.Editor
         {
             if (!File.Exists(Root + "Scenes/Level01_BanyanForest.unity")) Setup();
             PreparePolishAssets();
-            Directory.CreateDirectory("Builds/Windows");
+            Directory.CreateDirectory("Builds/CuoiTimTrang-Windows");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray(),
-                locationPathName = "Builds/Windows/Cuoi.exe", target = BuildTarget.StandaloneWindows64,
+                locationPathName = "Builds/CuoiTimTrang-Windows/Cuoi.exe", target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None
             });
             Directory.CreateDirectory("QA");
             File.WriteAllText("QA/build-result.txt", $"Result: {report.summary.result}\nErrors: {report.summary.totalErrors}\nWarnings: {report.summary.totalWarnings}\nBytes: {report.summary.totalSize}\nDuration: {report.summary.totalTime}\n");
             if (report.summary.result != BuildResult.Succeeded) throw new Exception("Windows build failed: " + report.summary.result);
-            Debug.Log("MOONLIT_BUILD_OK: Builds/Windows/Cuoi.exe");
+            Debug.Log("MOONLIT_BUILD_OK: Builds/CuoiTimTrang-Windows/Cuoi.exe");
         }
 
         [MenuItem("Moonlit/3 - Import forest additions (preserve existing art)")]

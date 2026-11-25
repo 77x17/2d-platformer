@@ -1,0 +1,5 @@
+Run sprites seen: 8
+Climb sprites seen: 8
+Reached wall top: True
+Stereo piano themes at 32 kHz: 6
+Passed: True

@@ -153,10 +153,10 @@ TextureImporter:
       name: MoonToken_00
       rect:
         serializedVersion: 2
-        x: 185
-        y: 161
-        width: 884
-        height: 894
+        x: 255
+        y: 215
+        width: 806
+        height: 814
       alignment: 9
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}

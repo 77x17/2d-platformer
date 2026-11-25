@@ -9,6 +9,7 @@ namespace Moonlit
         public static readonly Color Gold = new Color(1f, .73f, .34f);
         public static Sprite Square { get; private set; }
         public static Sprite Glow { get; private set; }
+        public static Sprite MoonMote { get; private set; }
         public static Material Material;
 
         public static void Init(Material material)
@@ -25,6 +26,38 @@ namespace Moonlit
                 g.SetPixel(x, y, new Color(1, 1, 1, a));
             }
             g.Apply(); Glow = UnityEngine.Sprite.Create(g, new Rect(0, 0, 96, 96), Vector2.one * .5f, 96);
+            MoonMote = CreateMoonMote();
+        }
+
+        static Sprite CreateMoonMote()
+        {
+            const int size = 32;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "Moon mote diamond",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            var pixels = new Color32[size * size];
+            Color32 rim = new Color32(201, 99, 23, 255);
+            Color32 gold = new Color32(245, 161, 51, 255);
+            Color32 highlight = new Color32(255, 216, 113, 255);
+            Color32 core = new Color32(255, 251, 220, 255);
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float dx = (x + .5f - size * .5f) / 10.5f;
+                float dy = (y + .5f - size * .5f) / 15f;
+                float edge = Mathf.Abs(dx) + Mathf.Abs(dy);
+                if (edge > 1) continue;
+                var color = dx < dy ? highlight : gold;
+                if (edge > .82f) color = rim;
+                else if (Mathf.Abs(dx + .08f) + Mathf.Abs(dy - .10f) < .40f) color = core;
+                pixels[y * size + x] = color;
+            }
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            return UnityEngine.Sprite.Create(texture, new Rect(0, 0, size, size), Vector2.one * .5f, size);
         }
 
         public static SpriteRenderer Sprite(string name, Sprite sprite, Vector2 position, Transform parent, int order = 0, float scale = 1)
@@ -41,9 +74,11 @@ namespace Moonlit
             var s = Sprite(name, Square, pos, parent, order); s.transform.localScale = new Vector3(size.x, size.y, 1); s.color = color; return s;
         }
 
-        public static SpriteRenderer Halo(string name, Vector2 pos, float size, Color color, Transform parent, int order = 15)
+        public static SpriteRenderer Halo(string name, Vector2 pos, float size, Color color, Transform parent, int order = 15, bool lightScenery = false)
         {
-            var s = Sprite(name, Glow, pos, parent, order, size); s.color = color; return s;
+            var s = Sprite(name, Glow, pos, parent, order, size); s.color = color;
+            if (lightScenery) s.gameObject.AddComponent<SceneLanternLight>().Source = s;
+            return s;
         }
     }
 
@@ -80,14 +115,15 @@ namespace Moonlit
         readonly Queue<SpriteRenderer> pool = new Queue<SpriteRenderer>();
         public int BurstCount { get; private set; }
 
-        public void Populate(float length)
+        const float FireflySpan = 70f;
+        public void Populate()
         {
             var rng = new System.Random(48);
-            for (int i = 0; i < 260; i++)
+            for (int i = 0; i < 54; i++)
             {
-                var pos = new Vector2((float)rng.NextDouble() * length, (float)rng.NextDouble() * 10 - 1);
+                var pos = new Vector2((float)rng.NextDouble() * FireflySpan, (float)rng.NextDouble() * 10 - 1);
                 var c = new Color(.45f, .75f, .61f); // Ambient insects stay muted green; collectibles are solid gold.
-                var sr = Visuals.Sprite("Drifting firefly", Visuals.Square, pos, transform, i % 2 == 0 ? -5 : 20, .035f + (float)rng.NextDouble() * .035f);
+                var sr = Visuals.Sprite("Drifting firefly", Visuals.Square, pos, transform, -5, .035f + (float)rng.NextDouble() * .035f);
                 motes.Add(new Mote { sr = sr, origin = pos, ambient = true, phase = (float)rng.NextDouble() * 8, color = c });
             }
         }
@@ -106,10 +142,10 @@ namespace Moonlit
             }
         }
 
-        public void CollectToken(Vector2 at, Sprite sprite)
+        public void CollectToken(Vector2 at)
         {
             var feedback = new GameObject("Moon token pickup feedback"); feedback.transform.SetParent(transform);
-            feedback.AddComponent<TokenCollectFeedback>().Initialize(sprite, at);
+            feedback.AddComponent<TokenCollectFeedback>().Initialize(at);
             Ring(at, Visuals.Gold, .65f); Burst(at, Visuals.Gold, 6, 1.2f);
         }
 
@@ -124,13 +160,18 @@ namespace Moonlit
 
         void Update()
         {
+            var game = MoonlitGame.Instance;
+            Vector2 camera = game && game.cameraRig ? (Vector2)game.cameraRig.transform.position : Vector2.zero;
             for (int i = motes.Count - 1; i >= 0; i--)
             {
                 var m = motes[i];
                 if (m.ambient)
                 {
                     float t = Time.time * .6f + m.phase;
-                    m.sr.transform.position = m.origin + new Vector2(Mathf.Sin(t) * .7f, Mathf.Cos(t * .7f) * .45f);
+                    var local = m.origin;
+                    local.x += FireflySpan * Mathf.Round((camera.x - local.x) / FireflySpan);
+                    local.y += Mathf.Max(0, camera.y - 4.5f) * .86f;
+                    m.sr.transform.position = local + new Vector2(Mathf.Sin(t) * .7f, Mathf.Cos(t * .7f) * .45f);
                     var c = m.color; c.a = .12f + .30f * Mathf.Pow((Mathf.Sin(t * 2) + 1) * .5f, 3); m.sr.color = c;
                     continue;
                 }

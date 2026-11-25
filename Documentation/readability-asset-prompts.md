@@ -2,7 +2,11 @@
 
 Tool: built-in `image_gen`, transparent background. Original PNG outputs copied into the project unchanged.
 
-## MoonToken.png
+## MoonToken.png — hạt trăng (20/11/2026)
+
+Create a single amber moon-seed collectible sprite for the Vietnamese night-forest platformer Cuội. Hand-painted pixel art with a clean 48-pixel-style silhouette, warm gold husk, luminous ivory crescent-shaped seam, and one tiny mint-green sprout attached at the tip. The seed is plump and almond-shaped, tilted slightly right, with bold light and dark clusters readable at 24 pixels. Center it on a true transparent square PNG. No coin, text, backdrop, shadow, halo, or detached particles.
+
+## MoonToken.png — đồng trăng (19/11/2026)
 
 Use case: stylized-concept. Asset type: one reusable collectible sprite for a 2D pixel-art Vietnamese moon forest platformer. Create ONE single front-facing round moon token, isolated centered on a genuinely transparent background, generous transparent padding. A chunky antique amber-gold coin with a clear deep navy outline, bright ivory crescent moon inset in a dark bronze circular face, subtle hammered metal texture, stepped pixel highlights and a thick golden rim. This is a small optional collectible repeated 40 times, distinct from tiny green fireflies and from the large turquoise final moon fragment. Designed to read clearly at 32-40 screen pixels. Bold simple silhouette, only 12-16 colors, crisp pixel clusters, no blur, no bloom, no gradients, no loose sparkles, no cast shadow, no text, no other objects. Flat side-view game sprite, no perspective tilt. Pixel-art style compatible with a detailed mossy forest environment, not cartoon vector.
 

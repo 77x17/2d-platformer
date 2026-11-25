@@ -85,7 +85,6 @@ MonoBehaviour:
   - {fileID: -1591765704, guid: 13076bf276b5aeb4c8a777bd475bfd91, type: 3}
   - {fileID: -774689368, guid: 13076bf276b5aeb4c8a777bd475bfd91, type: 3}
   - {fileID: 1378362786, guid: 13076bf276b5aeb4c8a777bd475bfd91, type: 3}
-  moonToken: {fileID: -1387880358, guid: d595b01cc07868044bd0dd92ca4aa15b, type: 3}
   forestExtras:
   - {fileID: 1355317897, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}
   - {fileID: -1144081576, guid: 6374bfc03688cd7458d26adc239cb74f, type: 3}

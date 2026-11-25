@@ -12,21 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45a178955f4a5cf4eacc55ab67fd1fb0, type: 3}
   m_Name: PlayerTuning
   m_EditorClassIdentifier: Assembly-CSharp::Moonlit.PlayerTuning
-  runSpeed: 6.4
-  groundAcceleration: 65
-  groundDeceleration: 110
+  runSpeed: 6
+  groundAcceleration: 60
+  groundDeceleration: 75
   feetInset: 0.065
-  airAcceleration: 38
-  jumpSpeed: 13.5
-  gravity: 36
-  fallMultiplier: 1.25
-  maxFallSpeed: 23
+  airAcceleration: 60
+  jumpSpeed: 12
+  gravity: 24
+  fallMultiplier: 1.6
+  maxFallSpeed: 18
   coyoteTime: 0.1
-  jumpBuffer: 0.14
-  pulseRadius: 4.3
-  pulseCooldown: 3
-  stunDuration: 2.6
-  lightRadius: 6.4
-  lightSoftEdge: 2.3
-  pulseLightRadius: 9
-  ambientVisibility: 0.3
+  jumpBuffer: 0.12
+  airJumpSpeed: 11.5
+  climbSpeed: 4
+  dashSpeed: 16
+  dashDuration: 0.22
+  dashCooldown: 0.9
+  pulseRadius: 5
+  pulseCooldown: 4
+  stunDuration: 2
+  lightRadius: 4.4
+  lightSoftEdge: 1.4
+  pulseLightRadius: 6.4
+  ambientVisibility: 0.075
