@@ -32,10 +32,15 @@ namespace Moonlit
             report.version = Application.unityVersion;
             yield return new WaitForSeconds(2);
             MoonlitCapture.Save(Path.Combine(output, "01-home.png"));
-            CheckResult("art_and_actors", g.art.cuoi.Length == 16 && g.art.dog.Length == 16 && g.art.cat.Length == 16 && g.enemies.Count == 6, "16 frames per actor, 3 dog + 3 cat encounters");
             yield return Press(Key.Enter);
-            CheckResult("keyboard_start", g.State == GameState.Playing, "Enter starts from the home screen through the Input System");
-            if (g.State != GameState.Playing) g.StartRun();
+            yield return Press(Key.Enter);
+            while (g.IsLoadingChapter) yield return null;
+            CheckResult("keyboard_start", g.State == GameState.Prologue || g.State == GameState.Playing, "Enter opens the picker and confirms the first chapter");
+            if (g.InStory) g.EndStory();
+            if (g.State != GameState.Playing) g.StartChapter(1,false);
+            while (g.IsLoadingChapter) yield return null;
+            CheckResult("art_and_actors", g.art.cuoi.Length == 16 && g.art.dog.Length == 16 && g.art.cat.Length == 16 &&
+                g.enemies.Exists(e => e.isCat) && g.enemies.Exists(e => !e.isCat), "Village cast and source animation frames");
             yield return new WaitForSeconds(.5f);
             CheckResult("spawn_grounded", g.player.Grounded, g.player.transform.position.ToString());
             InputSystem.QueueStateEvent(testKeyboard, new KeyboardState(Key.D));
@@ -86,7 +91,7 @@ namespace Moonlit
             yield return new WaitForSeconds(.65f); g.player.TestMove = 0;
             CheckResult("moon_completion", g.State == GameState.Complete && g.WallClimbUnlocked, "Moon pickup ends level and unlocks next chapter reward flag");
             yield return new WaitForSeconds(.8f); MoonlitCapture.Save(Path.Combine(output, "04-complete.png"));
-            g.StartRun(); yield return new WaitForSeconds(.3f);
+            g.StartChapter(1,false); yield return new WaitForSeconds(.3f);
             CheckResult("restart", g.Motes == 0 && g.CheckpointIndex == 0 && !g.level.lanternSwitch.Activated && g.State == GameState.Playing, "Full restart resets progression and mechanisms");
             yield return new WaitForSeconds(.2f); MoonlitCapture.Save(Path.Combine(output, "05-gameplay.png"));
             yield return new WaitForSeconds(.5f);

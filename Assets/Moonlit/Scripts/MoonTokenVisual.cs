@@ -4,32 +4,36 @@ namespace Moonlit
 {
     public sealed class MoonTokenVisual : MonoBehaviour
     {
-        public const float Size = .36f;
+        public const float Size = .65f;
         SpriteRenderer face, halo, sparkle;
         float phase;
         public void Initialize()
         {
             phase = transform.position.x * .71f;
             face = Visuals.Sprite("Moon mote diamond", Visuals.MoonMote, transform.position, transform, 18, Size);
-            halo = Visuals.Halo("Moon mote halo", transform.position, 1.05f, new Color(1, .65f, .22f, .35f), transform, 16);
+            halo = Visuals.Halo("Moon mote halo", transform.position, 1.4f, new Color(1, .65f, .22f, .35f), transform, 16);
             sparkle = Visuals.Sprite("Moon mote sparkle", Visuals.Square, transform.position, transform, 19, .045f);
             sparkle.transform.localRotation = Quaternion.Euler(0, 0, 45);
         }
         void Update()
         {
-            if (!face) return;
+            var player = MoonlitGame.Instance.player;
+            if (!face || !player) return;
+            float distance = Vector2.Distance((Vector2)player.transform.position + Vector2.up,transform.position);
+            float reveal = Mathf.SmoothStep(0,1,Mathf.InverseLerp(8f,4.5f,distance));
+            face.color = new Color(1,1,1,reveal);
             float clock = Time.time * 2.2f + phase;
             float wave = Mathf.Sin(clock);
             float pulse = (wave + 1) * .5f;
             var offset = Vector3.up * (wave * .085f);
             face.transform.localPosition = halo.transform.localPosition = offset;
             face.transform.localScale = Vector3.one * (Size * Mathf.Lerp(.95f, 1.10f, pulse));
-            halo.color = new Color(1, .65f, .22f, Mathf.Lerp(.30f, .52f, pulse));
+            halo.color = new Color(1, .65f, .22f, reveal * Mathf.Lerp(.30f, .52f, pulse));
 
             float angle = clock * 1.25f;
-            sparkle.transform.localPosition = offset + new Vector3(Mathf.Cos(angle) * .19f, Mathf.Sin(angle) * .22f, 0);
+            sparkle.transform.localPosition = offset + new Vector3(Mathf.Cos(angle) * .27f, Mathf.Sin(angle) * .32f, 0);
             float sparkleAlpha = Mathf.Pow(Mathf.Max(0, wave), 6);
-            sparkle.color = new Color(1, .97f, .76f, sparkleAlpha);
+            sparkle.color = new Color(1, .97f, .76f, sparkleAlpha * Mathf.InverseLerp(9.5f,6f,distance));
         }
     }
 

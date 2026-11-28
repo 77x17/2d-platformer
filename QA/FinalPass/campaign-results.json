@@ -1,0 +1,356 @@
+{
+    "build": "2.3.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "home_enter",
+            "detail": "Prologue",
+            "passed": true
+        },
+        {
+            "name": "heart_images_full",
+            "detail": "filled=3/3, three slots ≥20px, viewport=960×540",
+            "passed": true
+        },
+        {
+            "name": "movement",
+            "detail": "(6.36, 0.00)",
+            "passed": true
+        },
+        {
+            "name": "pause",
+            "detail": "Paused",
+            "passed": true
+        },
+        {
+            "name": "chapter1_ability_gates",
+            "detail": "jumps=1",
+            "passed": true
+        },
+        {
+            "name": "lamp",
+            "detail": "(61.50, 0.12)",
+            "passed": true
+        },
+        {
+            "name": "fall_returns_to_lamp",
+            "detail": "(61.50, 0.00)",
+            "passed": true
+        },
+        {
+            "name": "heart_images_after_fall",
+            "detail": "filled=2/2, three slots ≥20px, viewport=960×540",
+            "passed": true
+        },
+        {
+            "name": "pulse_stun_and_cooldown",
+            "detail": "cooldown=4",
+            "passed": true
+        },
+        {
+            "name": "heart_images_one_left",
+            "detail": "filled=1/1, three slots ≥20px, viewport=960×540",
+            "passed": true
+        },
+        {
+            "name": "last_heart",
+            "detail": "Defeat",
+            "passed": true
+        },
+        {
+            "name": "checkpoint_retry",
+            "detail": "Playing",
+            "passed": true
+        },
+        {
+            "name": "heart_images_restored",
+            "detail": "filled=3/3, three slots ≥20px, viewport=960×540",
+            "passed": true
+        },
+        {
+            "name": "parallax_chapter_1",
+            "detail": "camera +5: 0.200, 1.650, 3.150, 5.800",
+            "passed": true
+        },
+        {
+            "name": "sky_coverage_1",
+            "detail": "1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9",
+            "passed": true
+        },
+        {
+            "name": "parallax_ground_contact_1",
+            "detail": "minimum bank depth below frame 0.31u",
+            "passed": true
+        },
+        {
+            "name": "world_footings_1",
+            "detail": "52 planted props, 70 painted contacts, 0 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "wildlife_habitats_1",
+            "detail": "1 fish, 0 crows, 1 matched visible water/branch and nearby firm bank",
+            "passed": true
+        },
+        {
+            "name": "terrain_treads_1",
+            "detail": "41 tread meshes, 24 joined edges, 58 exposed edges",
+            "passed": true
+        },
+        {
+            "name": "shard_1",
+            "detail": "Complete",
+            "passed": true
+        },
+        {
+            "name": "parallax_chapter_2",
+            "detail": "camera +5: 0.200, 1.650, 3.150, 5.800",
+            "passed": true
+        },
+        {
+            "name": "sky_coverage_2",
+            "detail": "1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9",
+            "passed": true
+        },
+        {
+            "name": "parallax_ground_contact_2",
+            "detail": "minimum bank depth below frame 0.31u",
+            "passed": true
+        },
+        {
+            "name": "world_footings_2",
+            "detail": "123 planted props, 130 painted contacts, 16 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "wildlife_habitats_2",
+            "detail": "0 fish, 2 crows, 2 matched visible water/branch and nearby firm bank",
+            "passed": true
+        },
+        {
+            "name": "terrain_treads_2",
+            "detail": "38 tread meshes, 20 joined edges, 56 exposed edges",
+            "passed": true
+        },
+        {
+            "name": "double_jump",
+            "detail": "apex sample (8.00, 4.51)",
+            "passed": true
+        },
+        {
+            "name": "crow_warning_pulse",
+            "detail": "warned=True, flash=True, stuns=1, health=3",
+            "passed": true
+        },
+        {
+            "name": "crow_recovers_from_light",
+            "detail": "Resting",
+            "passed": true
+        },
+        {
+            "name": "crow_attack_sequence",
+            "detail": "lead=1.05s, attacks=1, recovery=Returning, camera=True",
+            "passed": true
+        },
+        {
+            "name": "crow_contact_once",
+            "detail": "damage events=1, hearts=3→2",
+            "passed": true
+        },
+        {
+            "name": "shard_2",
+            "detail": "Complete",
+            "passed": true
+        },
+        {
+            "name": "parallax_chapter_3",
+            "detail": "camera +5: 0.200, 1.650, 3.150, 5.800",
+            "passed": true
+        },
+        {
+            "name": "sky_coverage_3",
+            "detail": "1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9",
+            "passed": true
+        },
+        {
+            "name": "parallax_ground_contact_3",
+            "detail": "minimum bank depth below frame 0.31u",
+            "passed": true
+        },
+        {
+            "name": "world_footings_3",
+            "detail": "30 planted props, 39 painted contacts, 0 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "wildlife_habitats_3",
+            "detail": "2 fish, 0 crows, 2 matched visible water/branch and nearby firm bank",
+            "passed": true
+        },
+        {
+            "name": "terrain_treads_3",
+            "detail": "30 tread meshes, 24 joined edges, 36 exposed edges",
+            "passed": true
+        },
+        {
+            "name": "wall_climb",
+            "detail": "(24.46, 6.40)",
+            "passed": true
+        },
+        {
+            "name": "shrine_bridge",
+            "detail": "lit",
+            "passed": true
+        },
+        {
+            "name": "fish_warning_pulse",
+            "detail": "warned=True, flash=True, stuns=1, health=3",
+            "passed": true
+        },
+        {
+            "name": "fish_recovers_from_light",
+            "detail": "Resting",
+            "passed": true
+        },
+        {
+            "name": "fish_attack_sequence",
+            "detail": "lead=0.90s, attacks=1, recovery=Returning, camera=True",
+            "passed": true
+        },
+        {
+            "name": "fish_contact_once",
+            "detail": "damage events=1, hearts=3→2",
+            "passed": true
+        },
+        {
+            "name": "shard_3",
+            "detail": "Complete",
+            "passed": true
+        },
+        {
+            "name": "parallax_chapter_4",
+            "detail": "camera +5: 0.200, 1.650, 3.150, 5.800",
+            "passed": true
+        },
+        {
+            "name": "sky_coverage_4",
+            "detail": "1 continuous horizon, 936 viewport samples at 3 route positions, 2 heights, aspect 4:3 through 32:9",
+            "passed": true
+        },
+        {
+            "name": "parallax_ground_contact_4",
+            "detail": "minimum bank depth below frame 0.31u",
+            "passed": true
+        },
+        {
+            "name": "world_footings_4",
+            "detail": "25 planted props, 38 painted contacts, 4 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "wildlife_habitats_4",
+            "detail": "0 fish, 1 crows, 1 matched visible water/branch and nearby firm bank",
+            "passed": true
+        },
+        {
+            "name": "terrain_treads_4",
+            "detail": "27 tread meshes, 13 joined edges, 41 exposed edges",
+            "passed": true
+        },
+        {
+            "name": "dash",
+            "detail": "cooldown=0",
+            "passed": true
+        },
+        {
+            "name": "shard_4",
+            "detail": "Playing",
+            "passed": true
+        },
+        {
+            "name": "continue_unlocked_chapter",
+            "detail": "Đồi Gốc Đa",
+            "passed": true
+        },
+        {
+            "name": "replay_resets_chapter",
+            "detail": "Bờ Tre Làng Cuội",
+            "passed": true
+        },
+        {
+            "name": "opposing_keys_cancel",
+            "detail": "(10.00, 0.00)",
+            "passed": true
+        },
+        {
+            "name": "variable_jump",
+            "detail": "tap=1.20u hold=2.89u",
+            "passed": true
+        },
+        {
+            "name": "coyote_at_paddy_edge",
+            "detail": "(6.00, 10.08)",
+            "passed": true
+        },
+        {
+            "name": "buffered_landing_jump",
+            "detail": "(0.00, 7.20)",
+            "passed": true
+        },
+        {
+            "name": "raft_carries_feet",
+            "detail": "rider drift 0.016u",
+            "passed": true
+        },
+        {
+            "name": "contact_knockback_and_immunity",
+            "detail": "hearts=2 invulnerability=0.88",
+            "passed": true
+        },
+        {
+            "name": "left_boundary",
+            "detail": "(1.28, 0.00)",
+            "passed": true
+        },
+        {
+            "name": "run_pose_and_reversal",
+            "detail": "right=8.52u, left=7.80u, 8 rendered poses, 5.39 strides, 82 grounded samples",
+            "passed": true
+        },
+        {
+            "name": "run_stops_with_feet",
+            "detail": "stopped drift=0.000u, phase drift=0.000",
+            "passed": true
+        },
+        {
+            "name": "run_planted_sole",
+            "detail": "62 soles on terrain; max vertical gap=0.027u, horizontal slide during stance=0.000u",
+            "passed": true
+        },
+        {
+            "name": "climb_contact_and_crest",
+            "detail": "46 wall samples, 11 climbing sprites, ascent=5.06u, crested=True, missed wall/grip/cord=0/0/0",
+            "passed": true
+        },
+        {
+            "name": "climb_grip_holds_pose",
+            "detail": "18 held samples, body drift=0.000u, phase drift=0.000, resumed=True",
+            "passed": true
+        },
+        {
+            "name": "climb_hand_on_wall",
+            "detail": "36 hands on wall; max horizontal gap=0.000u, vertical grip slide=0.000u",
+            "passed": true
+        },
+        {
+            "name": "mantle_over_lip",
+            "detail": "observed pose mask=15/15, 5 planted pose samples, sole=(24.139, 6.415), touched upper bank=True",
+            "passed": true
+        },
+        {
+            "name": "continuous_four_chapter_route",
+            "detail": "L1(126.1s,cp=6,falls=0,jumps=42,air=0,climb=0.0,dash=0) L2(125.2s,cp=6,falls=0,jumps=63,air=24,climb=0.0,dash=0) L3(125.1s,cp=6,falls=0,jumps=31,air=6,climb=31.9,dash=0) L4(118.6s,cp=6,falls=0,jumps=40,air=12,climb=16.8,dash=7)",
+            "passed": true
+        }
+    ]
+}

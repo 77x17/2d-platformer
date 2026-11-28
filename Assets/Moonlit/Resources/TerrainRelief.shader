@@ -42,8 +42,8 @@ Shader "Moonlit/TerrainRelief"
                 float2 coord : TEXCOORD0;
                 float2 world : TEXCOORD1;
                 float2 side : TEXCOORD2;
-                float geology : TEXCOORD3;
-                half3 exposed : COLOR;
+                float2 geology : TEXCOORD3;
+                half4 exposed : COLOR;
             };
             Varyings Vert(Attributes v)
             {
@@ -53,15 +53,14 @@ Shader "Moonlit/TerrainRelief"
                 o.world = world.xy;
                 o.coord = v.coord;
                 o.side = v.distanceToSides;
-                o.geology = v.geology.x;
-                o.exposed = v.exposed.rgb;
+                o.geology = v.geology;
+                o.exposed = v.exposed;
                 return o;
             }
-            float StoneU(float x, float depth)
+            // Both coordinates sample 137 square pixels of the original 2172 x 724 plate per unit.
+            float StoneU(float x)
             {
-                float drift = sin(x * .22 + .8 * _CrestData.w) * .044
-                            + sin(x * .067 - depth * .4) * .054;
-                return 1 - abs(frac((x / 12.9 + drift + depth * .012) * .5) * 2 - 1);
+                return 1 - abs(frac((x + _CrestData.w * 3.13) * (137.0 / 2172.0) * .5) * 2 - 1);
             }
             half3 Stratum(float x, float slot, float bedDepth)
             {
@@ -69,16 +68,16 @@ Shader "Moonlit/TerrainRelief"
                 float seed = slot + _CrestData.w * 13;
                 float jitterX = frac(sin(seed * 27.53 + 1.37) * 435.17);
                 float jitterY = frac(sin(seed * 41.91 + 4.58) * 783.94);
-                float u = StoneU(x + (jitterX - .5) * 13.8, bedDepth + slot);
-                float v = .67 + .13 * jitterY - bedDepth * .181;
+                float u = StoneU(x + (jitterX - .5) * 13.8);
+                float v = .67 + .13 * jitterY - bedDepth * (137.0 / 724.0);
                 return SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,float2(u,v)).rgb;
             }
             half3 Pigment(float2 p)
             {
                 float depth = abs(p.y);
-                float seam = 2.82 + .19 * sin(p.x * .39 + _CrestData.w);
-                float u = StoneU(p.x,depth);
-                half3 top = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,float2(u,.913 - depth * .187)).rgb;
+                const float seam = 2.82;
+                float u = StoneU(p.x);
+                half3 top = SAMPLE_TEXTURE2D(_MainTex,sampler_MainTex,float2(u,.913 - depth * (137.0 / 724.0))).rgb;
                 if (depth < seam) return top;
                 float slot = floor((depth - seam) / 2.55);
                 float along = depth - seam - slot * 2.55;
@@ -86,6 +85,12 @@ Shader "Moonlit/TerrainRelief"
                 if (along >= .55) return rock;
                 half3 preceding = slot < .5 ? top : Stratum(p.x,slot-1,along+2.55);
                 return lerp(preceding,rock,smoothstep(0,.55,along));
+            }
+            half3 JoinedPigment(float2 p, float drop, float weight)
+            {
+                half3 own = Pigment(p);
+                if (weight <= .002) return own;
+                return lerp(own, Pigment(p-float2(0,drop)), weight);
             }
             half Luma(half3 c) { return dot(c,half3(.24,.56,.20)); }
 
@@ -97,7 +102,7 @@ Shader "Moonlit/TerrainRelief"
                                   + .024 * sin(x * 1.73 + .4) + .010 * sin(x * 4.3);
                 float relativeDepth = d + crestRelief;
                 float atlasRow = _CrestData.x + relativeDepth * _CrestData.y;
-                float crestU = frac(x / 11.9 + .036 * sin(x * .40) + .108 * sin(x * .067));
+                float crestU = 1 - abs(frac((x + _CrestData.w * 1.73) * (137.0 / 1528.0) * .5) * 2 - 1);
                 half4 crest = SAMPLE_TEXTURE2D(_Crest,sampler_Crest,float2(crestU, 1 - atlasRow / _CrestData.z));
                 // Only the selected biome's strip can decorate this lip.
                 crest.a *= step(-.75,relativeDepth) * (1 - step(.97,relativeDepth));
@@ -106,10 +111,11 @@ Shader "Moonlit/TerrainRelief"
                 half opacity = max(crest.a,step(.025,relativeDepth));
                 clip(opacity - .14);
 
-                float2 stoneAt = float2(x, floor(i.geology * 48 + .5) / 48);
-                half3 base = Pigment(stoneAt);
+                float2 stoneAt = float2(x, d);
+                float weight = saturate(i.geology.x / max(.001, i.geology.y));
+                half3 base = JoinedPigment(stoneAt, i.geology.y, weight);
                 half lum = Luma(base);
-                float2 slope = float2(Luma(Pigment(stoneAt+float2(.045,0)))-lum,lum-Luma(Pigment(stoneAt+float2(0,.045))));
+                float2 slope = float2(Luma(JoinedPigment(stoneAt+float2(.045,0), i.geology.y, weight))-lum,lum-Luma(JoinedPigment(stoneAt+float2(0,.045), i.geology.y, weight)));
                 float tread = (1 - smoothstep(.06,.34,relativeDepth)) * crest.a;
                 float3 normal = normalize(float3(-slope.x * 3.7,lerp(-slope.y * 3.5,.85,tread),.95));
                 float2 delta = _CuoiTerrainLight.xy - i.world;
@@ -129,14 +135,14 @@ Shader "Moonlit/TerrainRelief"
                 float undercut = .17 * smoothstep(.12,.36,relativeDepth) * (1-smoothstep(.46,.96,relativeDepth));
                 float chip = .16 + .085*sin(floor(d*5)*1.21 + x*.13);
                 float sideFace = (1 - smoothstep(chip,chip + .23,border)) * smoothstep(.04,.25,d);
-                half3 sideStone = Pigment(stoneAt + float2(1.27 + .31*sin(d*1.8), .13));
+                half3 sideStone = JoinedPigment(stoneAt + float2(1.27, .13), i.geology.y, weight);
                 half3 pigment = lerp(lerp(base,sideStone,sideFace*.7),crest.rgb,crest.a);
                 float leftLight = (1 - smoothstep(.018,.083,i.side.x)) * i.exposed.r * smoothstep(.08,.32,d);
                 half3 color = pigment * (moon + amber) * (1 - undercut) * (1 - sideFace * .27);
                 color += leftLight * half3(.055,.070,.082) * (.25 + lum);
                 color += _WetStone * pow(lambert,12) * falloff * half3(.15,.087,.038);
-                color *= 1 - .58 * smoothstep(2.4,10.5,i.geology);
-                return half4(color,opacity);
+                color *= 1 - .58 * smoothstep(2.4,10.5,d-i.geology.x);
+                return half4(color * i.exposed.a,opacity);
             }
             ENDHLSL
         }

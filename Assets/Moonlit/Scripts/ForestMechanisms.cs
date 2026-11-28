@@ -7,7 +7,9 @@ namespace Moonlit
     {
         public Vector2 travel = new Vector2(0, 1.4f);
         public float period = 4;
+        public SluiceFerry Ferry { get; set; }
         public Vector2 Delta { get; private set; }
+        public Vector2 PhysicsPosition => rb.position;
         public Vector2 Velocity => Delta / Time.fixedDeltaTime;
         Vector2 origin, previous;
         Rigidbody2D rb;
@@ -18,7 +20,7 @@ namespace Moonlit
         {
             if (MoonlitGame.Instance.State != GameState.Playing) { Delta = Vector2.zero; return; }
             clock += Time.fixedDeltaTime;
-            Vector2 p = origin + travel * Mathf.Sin(clock * Mathf.PI * 2 / period);
+            Vector2 p = Ferry ? Ferry.Step(Time.fixedDeltaTime) : origin + travel * Mathf.Sin(clock * Mathf.PI * 2 / period);
             Delta = p - previous; previous = p; rb.MovePosition(p);
         }
         public void ResetPlatform() { clock = 0; rb.position = origin; previous = origin; Delta = Vector2.zero; }
@@ -78,7 +80,7 @@ namespace Moonlit
             var g = MoonlitGame.Instance;
             if (kind == PickupKind.Mote)
             {
-                Collected = true; g.Motes++;
+                Collected = true; g.CollectMote();
                 g.effects.CollectToken(transform.position);
                 g.hud.TokenCollected(); g.audioFx.Play("collect"); gameObject.SetActive(false);
             }
@@ -90,7 +92,7 @@ namespace Moonlit
                     g.effects.Burst(transform.position + Vector3.up, Visuals.Gold, 20, 3);
                 }
             }
-            else { Collected = true; g.Complete(); gameObject.SetActive(false); }
+            else if (g.Complete()) { Collected = true; gameObject.SetActive(false); }
         }
         public void SetCheckpointLit(bool lit)
         {
@@ -101,19 +103,33 @@ namespace Moonlit
 
     public sealed class LanternSwitch : MonoBehaviour
     {
-        public GameObject bridge;
-        public bool Activated { get; private set; }
+        public GameObject bridge { get; private set; }
+        public bool Activated => span && span.Rising;
+        public bool Open => span && span.Open;
+        public float Rise => span ? span.Rise : 0;
+        RisingLanternBridge span;
         SpriteRenderer glow;
+
         void Awake() { glow = Visuals.Halo("Sleeping shrine light", transform.position + Vector3.up * 1.1f, 3, new Color(.5f, .8f, 1, .3f), transform); }
+        public void Build(GameObject deck, float submersion)
+        {
+            bridge = deck;
+            span = deck.AddComponent<RisingLanternBridge>();
+            span.Build(submersion);
+        }
         public bool Near => Vector2.Distance(MoonlitGame.Instance.player.transform.position, transform.position) < 2.5f;
         public void Activate(bool lanternPulse = false)
         {
             if (Activated || (!lanternPulse && !Near)) return;
-            Activated = true; bridge.SetActive(true); glow.color = new Color(1, .75f, .3f, .8f);
+            span.StartRising(); glow.color = new Color(1, .75f, .3f, .8f);
             var g = MoonlitGame.Instance; g.effects.Ring(transform.position + Vector3.up, Visuals.Gold, 5);
             g.effects.Burst(transform.position + Vector3.up, Visuals.Gold, 35, 3); g.audioFx.PlayInteraction();
-            g.Toast("CẦU ĐÃ THỨC GIẤC", "Ánh đèn nối lại con đường qua khe núi.");
+            g.Toast("MIẾU BẾN ĐÒ", "Tre đang nổi lên. Chờ mặt cầu ngang bờ rồi hãy qua.");
         }
-        public void ResetSwitch() { Activated = false; bridge.SetActive(false); if (glow) glow.color = new Color(.5f, .8f, 1, .3f); }
+        public void ResetSwitch()
+        {
+            span.Lower();
+            glow.color = new Color(.5f, .8f, 1, .3f);
+        }
     }
 }

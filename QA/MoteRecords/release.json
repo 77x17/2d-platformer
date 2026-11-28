@@ -1,0 +1,14 @@
+{
+  "build": "2.5.0",
+  "platform": "Windows x64",
+  "compiled_scenes": [
+    "00_Home",
+    "01_Bamboo_Village",
+    "02_Bamboo_Forest",
+    "03_Lantern_River",
+    "04_Banyan_Hill"
+  ],
+  "bytes": 114928355,
+  "verified_entries": 216,
+  "sha256": "7298FD0BD9B8EBA3EF02623B9D0013D8F4DB3C68FA49A74F99F860FAF7F79C02"
+}

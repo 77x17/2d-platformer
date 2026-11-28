@@ -19,7 +19,8 @@ namespace Moonlit
         IEnumerator Start()
         {
             var g = MoonlitGame.Instance; yield return new WaitForSeconds(2);
-            g.StartRun(); g.player.TestInput = true;
+            g.StartChapter(1,false); while (g.IsLoadingChapter) yield return null;
+            g.player.TestInput = true;
             var surfaces = g.level.GetComponentsInChildren<BoxCollider2D>(true)
                 .Where(c => !c.isTrigger && c.gameObject.layer == 8 && c.size.y < 20 && !c.GetComponent<PushableCrate>())
                 .OrderBy(c => c.transform.position.x).ToArray();

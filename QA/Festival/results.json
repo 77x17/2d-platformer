@@ -1,0 +1,121 @@
+{
+    "build": "2.6.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "home_three_choices",
+            "detail": "Select Chapter, Home Settings, Quit Game",
+            "passed": true
+        },
+        {
+            "name": "cancel_conflicting_binding",
+            "detail": "A belongs to movement; Esc cancels capture",
+            "passed": true
+        },
+        {
+            "name": "bind_jump_in_home",
+            "detail": "Q",
+            "passed": true
+        },
+        {
+            "name": "play_opens_picker",
+            "detail": "Home",
+            "passed": true
+        },
+        {
+            "name": "rebound_key_jumps",
+            "detail": "jumps=1",
+            "passed": true
+        },
+        {
+            "name": "pause_settings_reset_keys",
+            "detail": "restored Phím cách",
+            "passed": true
+        },
+        {
+            "name": "star_blinks_on_minimap",
+            "detail": "scale 0.86 to 1.11",
+            "passed": true
+        },
+        {
+            "name": "star_blinks_on_paused_map",
+            "detail": "scale 0.86 to 1.11",
+            "passed": true
+        },
+        {
+            "name": "alternate_routes_1",
+            "detail": "branch platforms=21, optional motes=10",
+            "passed": true
+        },
+        {
+            "name": "exploration_jump_sequence_1",
+            "detail": "Irrigation Lookout 01 to Irrigation Lookout 03: landings=3/3, mote=True, feet=(49.00, 5.75)",
+            "passed": true
+        },
+        {
+            "name": "alternate_routes_2",
+            "detail": "branch platforms=17, optional motes=10",
+            "passed": true
+        },
+        {
+            "name": "exploration_jump_sequence_2",
+            "detail": "Charcoal Kiln Eaves 01 to Charcoal Kiln Eaves 03: landings=3/3, mote=True, feet=(188.79, 13.20)",
+            "passed": true
+        },
+        {
+            "name": "alternate_routes_3",
+            "detail": "branch platforms=19, optional motes=10",
+            "passed": true
+        },
+        {
+            "name": "exploration_jump_sequence_3",
+            "detail": "Lower Pontoon Walk 02 to Lower Pontoon Walk 03: landings=1/1, mote=True, feet=(55.48, 0.60)",
+            "passed": true
+        },
+        {
+            "name": "three_hearts_chapter_and_lantern",
+            "detail": "Màn 03 · Khúc sông thả đèn",
+            "passed": true
+        },
+        {
+            "name": "sampans_meet_water",
+            "detail": "moored boats=6, river reaches=8",
+            "passed": true
+        },
+        {
+            "name": "shrine_bridge_emerges",
+            "detail": "elapsed=1.94, intermediate pose=True",
+            "passed": true
+        },
+        {
+            "name": "jump_for_ferry_mote",
+            "detail": "sailed=True, jumped=True, collected=True, landed on raft=True, token=(490.85, 7.05, 0.00)",
+            "passed": true
+        },
+        {
+            "name": "ferry_hanger_follows_cable",
+            "detail": "maximum gap=0.091",
+            "passed": true
+        },
+        {
+            "name": "call_empty_ferry_from_either_bank",
+            "detail": "left lever=True (GoingLeft at (476.65, 4.10), grounded=True), right lever=True (GoingRight at (505.50, 4.35), grounded=True)",
+            "passed": true
+        },
+        {
+            "name": "alternate_routes_4",
+            "detail": "branch platforms=18, optional motes=10",
+            "passed": true
+        },
+        {
+            "name": "exploration_jump_sequence_4",
+            "detail": "Ravine Root Ledges 01 to Ravine Root Ledges 02: landings=1/1, mote=True, feet=(57.74, 2.65)",
+            "passed": true
+        },
+        {
+            "name": "living_banyan_canopies",
+            "detail": "guardian and landmark canopies use Moonlit/Banyan canopy",
+            "passed": true
+        }
+    ]
+}

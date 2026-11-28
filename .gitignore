@@ -4,6 +4,7 @@
 /Logs/
 /UserSettings/
 /Builds/
+/Build/
 *.csproj
 *.sln
 *.slnx
@@ -12,5 +13,8 @@
 *.user
 *.userprefs
 *.suo
-/QA/*.log
+/QA/**/*.log
 /QA/*.request
+
+# Original local screen capture; the Unity project and the distributable players are independent of it.
+/QA/Cuoi_taj2mgmV9b.mp4

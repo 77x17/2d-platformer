@@ -40,7 +40,7 @@ namespace Moonlit.Editor
         public static void Run()
         {
             Directory.CreateDirectory(Folder);
-            EditorSceneManager.OpenScene("Assets/Moonlit/Scenes/Level01_BanyanForest.unity");
+            EditorSceneManager.OpenScene("Assets/Moonlit/Scenes/01_Bamboo_Village.unity");
             SessionState.SetBool(SessionKey, true);
             EditorApplication.EnterPlaymode();
         }
@@ -63,7 +63,7 @@ namespace Moonlit.Editor
                 switch (step++)
                 {
                     case 0:
-                        game.StartRun();
+                        game.StartChapter(1,false);
                         next = now + 1.7;
                         break;
                     case 1:
@@ -103,7 +103,7 @@ namespace Moonlit.Editor
             }
         }
 
-        static void SetSize(Vector2Int size)
+        internal static void SetSize(Vector2Int size)
         {
             Vector2 pixels = size;
             // These are the Editor's per-display and Game View targets, independent of the desktop window.
@@ -138,7 +138,7 @@ namespace Moonlit.Editor
             typeof(EditorWindow).GetMethod("SetPlayModeViewSize", instance).Invoke(gameView, new object[] { pixels });
         }
 
-        static Color32[] Render(Vector2Int size, string name)
+        internal static Color32[] Render(Vector2Int size, string name, string folder = null)
         {
             if (!Targets.TryGetValue(size, out var target))
             {
@@ -168,7 +168,7 @@ namespace Moonlit.Editor
                     image.SetPixels32(colors);
                     image.Apply();
                 }
-                File.WriteAllBytes(Path.Combine(Folder, name+".png"), image.EncodeToPNG());
+                File.WriteAllBytes(Path.Combine(folder ?? Folder, name+".png"), image.EncodeToPNG());
                 return colors;
             }
             finally
@@ -233,7 +233,7 @@ namespace Moonlit.Editor
             if (motion == 0)
             {
                 SetSize(viewSize);
-                game.StartRun();
+                game.StartChapter(1,false);
                 game.tutorials.Enabled = false;
                 p.Teleport(new Vector2(176,.04f));
                 p.TestInput = true; p.TestMove = 1;
@@ -248,6 +248,12 @@ namespace Moonlit.Editor
                 // Unlock only the in-memory test instance. This QA never changes saved player progression.
                 typeof(MoonlitGame).GetField("best",BindingFlags.Instance | BindingFlags.NonPublic).SetValue(game,2);
                 game.StartChapter(3);
+                motion = -1;
+            }
+            else if (motion == -1)
+            {
+                if (game.IsLoadingChapter) return;
+                motion = 1;
                 game.tutorials.Enabled = false;
                 p.Teleport(new Vector2(20,.04f)); p.TestInput = true; p.TestMove = 1;
                 game.cameraRig.Snap(); movingSince = now; motion++;

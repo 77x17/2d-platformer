@@ -15,6 +15,27 @@ namespace Moonlit
         static readonly float[] ShelfRows = { -.78f, 0, .16f, .34f, .54f, .72f };
         static readonly int Lamp = Shader.PropertyToID("_CuoiTerrainLight");
         readonly List<Mesh> meshes = new List<Mesh>();
+        readonly List<Vector3> rootContacts = new List<Vector3>();
+
+        public static void AddRootContact(GameObject tree, Vector2 basePoint, float radius)
+        {
+            Owner(tree).rootContacts.Add(new Vector3(basePoint.x, basePoint.y, radius));
+        }
+
+        // Baked onto the bank mesh so the root shadow can only appear on actual painted ground.
+        float RootLight(float x, float top, float depth)
+        {
+            if (depth > .54f) return 1;
+            float occlusion = 0;
+            foreach (var root in rootContacts)
+            {
+                if (Mathf.Abs(top - root.y) > .02f) continue;
+                float w = Mathf.Clamp01(1 - Mathf.Abs(x - root.x) / root.z);
+                occlusion = Mathf.Max(occlusion, Mathf.SmoothStep(0, 1, w));
+            }
+            return 1 - .37f * occlusion * (1 - Mathf.SmoothStep(0, 1, Mathf.Max(0, depth) / .54f));
+        }
+
         public int MeshCount => meshes.Count;
         public int JoinedEdges { get; private set; }
         public int ExposedEdges { get; private set; }
@@ -42,16 +63,16 @@ namespace Moonlit
             }
         }
 
-        public static void DressLedge(MoonlitGame game, int stage, GameObject ledge, float centerX, float top, float width, bool wood)
+        public static SpriteRenderer DressLedge(MoonlitGame game, int stage, GameObject ledge, float centerX, float top, float width, bool wood)
         {
             if (wood)
             {
-                var board = game.art.environment[4];
-                var sr = Visuals.Sprite("Ván cầu với mép chịu lực", board, new Vector2(centerX, top + .65f), ledge.transform, 3);
-                sr.transform.localScale = new Vector3(width / board.bounds.size.x, 1.1f / board.bounds.size.y, 1);
-                return;
+                const float thickness = .85f;
+                return Visuals.Band("Timber deck with end brackets", game.art.forestExtras[11],
+                    new Vector2(centerX, top + .12f - thickness * .5f), width, thickness, 19, ledge.transform, 3);
             }
             DressFace(stage, ledge, centerX - width / 2, centerX + width / 2, top, .72f, .72f, true);
+            return null;
         }
 
         static TerrainArt Owner(GameObject ground)
@@ -68,7 +89,7 @@ namespace Moonlit
             var material = new Material(Resources.Load<Shader>("TerrainRelief")) { name = Textures[index] };
             material.mainTexture = Resources.Load<Texture2D>("Terrain/" + Textures[index]);
             material.SetTexture("_Crest", Resources.Load<Texture2D>("Terrain/SurfaceCrests"));
-            // Source pixels per vertical world unit. Horizontal sampling follows a gently warped world coordinate.
+            // Source pixels per vertical world unit. Horizontal and vertical sampling use the same original pixel density.
             material.SetVector("_CrestData", new Vector4(CrestRows[index], 137, 941, index));
             material.SetFloat("_WetStone", stage == 3 ? 1 : 0);
             Materials[index] = material;
@@ -136,8 +157,12 @@ namespace Moonlit
                     vertices[id] = new Vector3(x - width * .5f, -depth, 0);
                     pigment[id] = new Vector2(start + x, depth);
                     bevel[id] = new Vector2(x - left, right - x);
-                    float datum = shelf ? 0 : Mathf.Max(JointDepth(x,leftDrop,width), JointDepth(width-x,rightDrop,width));
-                    strata[id] = new Vector2(depth - datum, 0);
+                    float leftDatum = shelf ? 0 : JointDepth(x, leftDrop, width);
+                    float rightDatum = shelf ? 0 : JointDepth(width-x, rightDrop, width);
+                    float datum = Mathf.Max(leftDatum, rightDatum);
+                    float drop = leftDatum > rightDatum ? leftDrop : rightDrop;
+                    strata[id] = new Vector2(datum, datum > 0 ? drop : 0);
+                    edgeColor.a = shelf ? 1 : owner.RootLight(start + x, top, depth);
                     exposure[id] = edgeColor;
                     if (row == 0 || col == 0) continue;
                     int upper = id - columns;
@@ -145,7 +170,7 @@ namespace Moonlit
                     triangles[k++] = upper; triangles[k++] = id; triangles[k++] = id - 1;
                 }
             }
-            var mesh = new Mesh { name = "Địa tầng " + Textures[stage - 1] };
+            var mesh = new Mesh { name = "Terrain strata - " + Textures[stage - 1] };
             mesh.vertices = vertices; mesh.uv = pigment; mesh.uv2 = bevel; mesh.uv3 = strata;
             mesh.colors32 = exposure; mesh.triangles = triangles;
             mesh.RecalculateBounds();

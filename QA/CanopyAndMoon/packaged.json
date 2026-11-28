@@ -1,0 +1,181 @@
+{
+    "build": "2.4.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "home_is_separate_initial_scene",
+            "detail": "Assets/Moonlit/Scenes/00_Home.unity",
+            "passed": true
+        },
+        {
+            "name": "home_copyright_button",
+            "detail": "Home",
+            "passed": true
+        },
+        {
+            "name": "home_copyright_opens",
+            "detail": "focused back button=True",
+            "passed": true
+        },
+        {
+            "name": "home_copyright_vietnamese_glyphs",
+            "detail": "accented letters=65, missing glyphs=0",
+            "passed": true
+        },
+        {
+            "name": "home_copyright_returns",
+            "detail": "Home",
+            "passed": true
+        },
+        {
+            "name": "illustrated_scene_loading",
+            "detail": "Home to Bamboo Village",
+            "passed": true
+        },
+        {
+            "name": "active_chapter_scene_1",
+            "detail": "Assets/Moonlit/Scenes/01_Bamboo_Village.unity, chapter world owned by scene=True",
+            "passed": true
+        },
+        {
+            "name": "painted_ground_and_lift_anchors_1",
+            "detail": "52 planted props, 70 painted contacts, 4 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "village_banyan_visible",
+            "detail": "(174.00, -0.60, 0.00)",
+            "passed": true
+        },
+        {
+            "name": "village_hoist_attachments",
+            "detail": "44 moving frames, height 6.20 to 2.70, landed=True, reset=True",
+            "passed": true
+        },
+        {
+            "name": "ten_hidden_motes_and_guidance_1",
+            "detail": "rejected=True, return=True, both directions=True, nine locked=True, collected=10",
+            "passed": true
+        },
+        {
+            "name": "chapter_fragment_1",
+            "detail": "shards=1",
+            "passed": true
+        },
+        {
+            "name": "active_chapter_scene_2",
+            "detail": "Assets/Moonlit/Scenes/02_Bamboo_Forest.unity, chapter world owned by scene=True",
+            "passed": true
+        },
+        {
+            "name": "painted_ground_and_lift_anchors_2",
+            "detail": "123 planted props, 130 painted contacts, 16 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "chimes_either_order",
+            "detail": "east first=True, repeat stays locked=True, open=True",
+            "passed": true
+        },
+        {
+            "name": "suspension_remains_attached_in_motion",
+            "detail": "platform (62.30, 5.23) to (62.30, 5.44, 0.00)",
+            "passed": true
+        },
+        {
+            "name": "environment_mix_2",
+            "detail": "amb_canopy, stereo channels=2, gain=0.160, playing=True",
+            "passed": true
+        },
+        {
+            "name": "ten_hidden_motes_and_guidance_2",
+            "detail": "rejected=True, return=True, both directions=True, nine locked=True, collected=10",
+            "passed": true
+        },
+        {
+            "name": "chapter_fragment_2",
+            "detail": "shards=2",
+            "passed": true
+        },
+        {
+            "name": "active_chapter_scene_3",
+            "detail": "Assets/Moonlit/Scenes/03_Lantern_River.unity, chapter world owned by scene=True",
+            "passed": true
+        },
+        {
+            "name": "painted_ground_and_lift_anchors_3",
+            "detail": "30 planted props, 39 painted contacts, 0 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "environment_mix_3",
+            "detail": "amb_river, stereo channels=2, gain=0.114, playing=True",
+            "passed": true
+        },
+        {
+            "name": "ten_hidden_motes_and_guidance_3",
+            "detail": "rejected=True, return=True, both directions=True, nine locked=True, collected=10",
+            "passed": true
+        },
+        {
+            "name": "chapter_fragment_3",
+            "detail": "shards=3",
+            "passed": true
+        },
+        {
+            "name": "active_chapter_scene_4",
+            "detail": "Assets/Moonlit/Scenes/04_Banyan_Hill.unity, chapter world owned by scene=True",
+            "passed": true
+        },
+        {
+            "name": "painted_ground_and_lift_anchors_4",
+            "detail": "25 planted props, 38 painted contacts, 4 lift attachments",
+            "passed": true
+        },
+        {
+            "name": "ten_hidden_motes_and_guidance_4",
+            "detail": "rejected=True, return=True, both directions=True, nine locked=True, collected=10",
+            "passed": true
+        },
+        {
+            "name": "chapter_fragment_4",
+            "detail": "shards=4",
+            "passed": true
+        },
+        {
+            "name": "four_fragments_reunion",
+            "detail": "buds=6",
+            "passed": true
+        },
+        {
+            "name": "ending_copyright_button",
+            "detail": "Ending",
+            "passed": true
+        },
+        {
+            "name": "ending_copyright_opens",
+            "detail": "focused back button=True",
+            "passed": true
+        },
+        {
+            "name": "ending_copyright_vietnamese_glyphs",
+            "detail": "accented letters=65, missing glyphs=0",
+            "passed": true
+        },
+        {
+            "name": "ending_copyright_returns",
+            "detail": "Ending",
+            "passed": true
+        },
+        {
+            "name": "ending_returns_to_home",
+            "detail": "Assets/Moonlit/Scenes/00_Home.unity, Banyan Hill unloaded=True",
+            "passed": true
+        },
+        {
+            "name": "home_selects_unlocked_forest",
+            "detail": "Assets/Moonlit/Scenes/02_Bamboo_Forest.unity, unlocked chapter=4",
+            "passed": true
+        }
+    ]
+}

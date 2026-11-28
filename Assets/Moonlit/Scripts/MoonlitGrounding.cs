@@ -13,7 +13,7 @@ namespace Moonlit
         struct GroundContact
         {
             public SpriteRenderer art;
-            public float localY, halfFoot;
+            public Vector2[] paintedFeet;
         }
         readonly List<GroundContact> contacts = new List<GroundContact>();
 
@@ -23,21 +23,22 @@ namespace Moonlit
             int tested = 0;
             foreach (var contact in contacts)
             {
-                // Sample both gateposts. A single ray through a gateway can miss an unsupported side.
-                int rays = contact.halfFoot > 0 ? 2 : 1;
-                for (int i = 0; i < rays; i++)
+                foreach (var paint in contact.paintedFeet)
                 {
-                    var anchor = contact.art.transform.TransformPoint(new Vector3((i * 2 - 1) * contact.halfFoot, contact.localY, 0));
-                    var hit = Physics2D.Raycast((Vector2)anchor + Vector2.up * .36f, Vector2.down, .73f, 1 << 8);
-                    if (!hit || hit.normal.y < .65f)
+                    var anchor = contact.art.transform.TransformPoint(paint);
+                    var hit = Physics2D.Raycast((Vector2)anchor + Vector2.up * .38f, Vector2.down, .64f, 1 << 8);
+                    if (!hit || hit.normal.y < .65f || anchor.y > hit.point.y + .04f)
                     {
-                        detail = $"{contact.art.name} foot {anchor:F2} has no supporting terrain";
+                        detail = $"{contact.art.name} painted foot {anchor:F2} is clear of the soil";
                         return false;
                     }
                     tested++;
                 }
             }
-            detail = $"{contacts.Count} planted props, {tested} foot-to-ground raycasts";
+            var lifts = GetComponentsInChildren<LiftSuspension>(true);
+            foreach (var lift in lifts)
+                if (!lift.CheckAttachments(out detail)) return false;
+            detail = $"{contacts.Count} planted props, {tested} painted contacts, {lifts.Length * 4} lift attachments";
             return tested > 0;
         }
 
@@ -59,32 +60,67 @@ namespace Moonlit
             return best <= maxShift + .0001f;
         }
 
+        // Coordinates in the source rectangle, independent of SpriteMeshType and the transparent margin.
+        static Vector2 PaintedPoint(Sprite sprite, float x, float y)
+        {
+            var pixel = new Vector2(sprite.rect.width * x, sprite.rect.height * y);
+            return (pixel - sprite.pivot) / sprite.pixelsPerUnit;
+        }
+
+        void MooredSampan(float x, float height, Color tint)
+        {
+            var sprite = Resources.Load<Sprite>("RiverSampan");
+            float scale = height / sprite.bounds.size.y;
+            float halfWidth = sprite.bounds.size.x * scale * .49f;
+            foreach (var reach in waterways)
+            {
+                if (x - halfWidth < reach.xMin || x + halfWidth > reach.xMax || !OpenWater(x, reach.yMax, halfWidth)) continue;
+                // The lower 12% of this painted hull sits below the surface. Let the water pass draw over it.
+                float line = reach.yMax;
+                float pivot = line - PaintedPoint(sprite, .5f, .12f).y * scale;
+                var hull = Visuals.Sprite("Moored River Sampan", sprite, new Vector2(x, pivot), decoration, -8);
+                hull.transform.localScale = Vector3.one * scale;
+                hull.color = tint;
+                return;
+            }
+            Debug.LogWarning($"No open berth for a sampan at x={x} in {game.LevelTitle}.");
+        }
+
         void Landmark(string asset, float x, float floor, float height, Color tint)
         {
             var sprite = Resources.Load<Sprite>(asset);
             if (!sprite) return;
             float scale = height / sprite.bounds.size.y;
             float width = sprite.bounds.size.x * scale;
-            Vector2 foot = new Vector2(x, floor);
-            if (asset != "RiverSampan" && !FindFoot(x, width * .93f, 2.85f, out foot)) return;
-            float padding = asset == "RiverSampan" ? .035f : .03f;
-            var s = Visuals.Sprite(asset, sprite, foot - Vector2.up * (sprite.bounds.min.y * scale + height * padding), decoration, -8);
+            Vector2 foot;
+            if (!FindFoot(x, width * .93f, 2.85f, out foot)) return;
+            bool tree = asset == "YoungBanyan", gate = asset == "VillageGate";
+            // The outer roots end 5.7% above the image bottom; the cottage sill and each
+            // separate gatepost also have transparent padding underneath their painted feet.
+            float baseline = tree ? .061f : gate ? .042f : .049f;
+            float inset = tree ? .10f : .05f;
+            var pivot = foot - Vector2.up * (PaintedPoint(sprite, .5f, baseline).y * scale + inset);
+            var s = Visuals.Sprite(asset, sprite, pivot, decoration, -8);
             s.transform.localScale = Vector3.one * scale; s.color = tint;
-            if (asset != "RiverSampan")
-                contacts.Add(new GroundContact { art = s, localY = sprite.bounds.min.y + sprite.bounds.size.y * padding, halfFoot = asset == "VillageGate" ? sprite.bounds.size.x * .37f : 0 });
-            if (asset == "VillageGate" || asset == "VillageCottage")
+            var points = tree
+                ? new[] { PaintedPoint(sprite,.12f,.055f), PaintedPoint(sprite,.5f,.048f), PaintedPoint(sprite,.88f,.057f) }
+                : gate ? new[] { PaintedPoint(sprite,.12f,.036f), PaintedPoint(sprite,.88f,.040f) }
+                : new[] { PaintedPoint(sprite,.20f,.049f), PaintedPoint(sprite,.80f,.035f) };
+            contacts.Add(new GroundContact { art = s, paintedFeet = points });
+            if (tree)
+            {
+                Visuals.AnimateBanyan(s);
+                TerrainArt.AddRootContact(s.gameObject, foot, width * .36f);
+            }
+            if (gate || asset == "VillageCottage")
             {
                 // Shallow masonry plinth and a two-step tread give the structure a contact shadow.
                 float baseY = foot.y + .035f;
                 var stone = game.art.forestExtras[2];
-                int count = Mathf.CeilToInt(width / 1.4f);
-                for (int i = 0; i < count; i++)
-                {
-                    float piece = width / count;
-                    var block = Visuals.Sprite("Courtyard foundation stones", stone, new Vector2(foot.x - width * .5f + (i + .5f) * piece, baseY + .15f), decoration, -7);
-                    block.transform.localScale = new Vector3((piece + .035f) / stone.bounds.size.x, .24f / stone.bounds.size.y, 1);
-                    block.color = new Color(.61f, .66f, .63f);
-                }
+                const float stoneHeight = .38f;
+                var plinth = Visuals.Band("Courtyard masonry plinth", stone, new Vector2(foot.x, baseY - .055f),
+                    width, stoneHeight, 15, decoration, -7);
+                plinth.color = new Color(.61f, .66f, .63f);
                 Beam("Courtyard doorstep", new Vector2(foot.x - width * .21f, baseY + .035f), new Vector2(foot.x + width * .21f, baseY + .035f), .10f, new Color(.50f, .48f, .43f), decoration, -6);
             }
         }
@@ -112,7 +148,7 @@ namespace Moonlit
             foliage.transform.localScale = Vector3.one * scale;
             foliage.transform.localPosition = new Vector3(0, -sprite.bounds.min.y * scale - .04f, 0);
             foliage.color = tint; foliage.flipX = flip;
-            contacts.Add(new GroundContact { art = foliage, localY = sprite.bounds.min.y });
+            contacts.Add(new GroundContact { art = foliage, paintedFeet = new[] { PaintedPoint(sprite,.50f,cell == 9 ? .003f : .060f) } });
             var wind = root.gameObject.AddComponent<AmbientMotion>();
             wind.sway = amplitude; wind.speed = .8f; wind.phase = phase; wind.windAffected = true;
         }
@@ -167,24 +203,23 @@ namespace Moonlit
                         pixels[y * width + col] = color;
                     }
                 }
-                var paper = new Texture2D(width, rows, TextureFormat.RGBA32, false) { name = "Sợi dây leo bện", filterMode = FilterMode.Point };
+                var paper = new Texture2D(width, rows, TextureFormat.RGBA32, false) { name = "Braided wall fiber", filterMode = FilterMode.Point };
                 paper.SetPixels32(pixels); paper.Apply();
                 climbingFibre = Sprite.Create(paper, new Rect(0, 0, width, rows), Vector2.one * .5f, 55, 0, SpriteMeshType.FullRect);
             }
-            var cord = Visuals.Sprite("Dây leo bện", climbingFibre, new Vector2(x, bottom + height * .5f), terrain, 7);
+            var cord = Visuals.Sprite("Braided Wall Cord", climbingFibre, new Vector2(x, bottom + height * .5f), terrain, 7);
             cord.drawMode = SpriteDrawMode.Tiled;
             cord.size = new Vector2(climbingFibre.bounds.size.x, height + .055f);
             var crest = new Vector2(x, bottom + height);
             var root = new Color(.68f, .63f, .40f);
-            Beam("Rễ bám mép đá", crest - Vector2.up * .07f, crest + new Vector2(.19f, .025f), .14f, root, terrain, 7);
-            Beam("Rễ bám mép đá", crest + new Vector2(.19f, .025f), crest + new Vector2(.65f, -.065f), .105f, root, terrain, 7);
+            Beam("Cliff edge grip roots", crest - Vector2.up * .07f, crest + new Vector2(.19f, .025f), .14f, root, terrain, 7);
+            Beam("Cliff edge grip roots", crest + new Vector2(.19f, .025f), crest + new Vector2(.65f, -.065f), .105f, root, terrain, 7);
         }
 
         SpriteRenderer Beam(string name, Vector2 a, Vector2 b, float thickness, Color tint, Transform parent, int order)
         {
             Vector2 direction = b - a;
-            var sr = Visuals.Sprite(name, BambooGrain(), (a + b) * .5f, parent, order);
-            sr.transform.localScale = new Vector3(direction.magnitude / sr.sprite.bounds.size.x, thickness / sr.sprite.bounds.size.y, 1);
+            var sr = Visuals.Band(name, BambooGrain(), (a + b) * .5f, direction.magnitude, thickness, 0, parent, order);
             sr.transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
             sr.color = tint;
             return sr;
@@ -234,15 +269,16 @@ namespace Moonlit
             if (!weathered) Beam("Pier bracing", new Vector2(right + .04f, top - 2.25f), new Vector2(left, top - .46f), .12f, tint, parent, -3);
         }
 
-        void SupportLift(float x, float top, float width)
+        void SupportLift(float x, float top, float width, SpriteRenderer deck, float clearance = 3.7f)
         {
-            float left = x - width * .64f, right = x + width * .64f, height = top + 3.7f, baseY = Mathf.Min(-8.5f, top - 6);
+            float left = x - width * .64f, right = x + width * .64f, height = top + clearance, baseY = Mathf.Min(-8.5f, top - 6);
             var tint = new Color(.49f, .46f, .36f);
             Beam("Hoist upright", new Vector2(left - .2f, baseY), new Vector2(left, height + .18f), .25f, tint, decoration, -6);
             Beam("Hoist upright", new Vector2(right + .2f, baseY), new Vector2(right, height + .18f), .25f, tint, decoration, -6);
-            Beam("Hoist lintel", new Vector2(left - .22f, height), new Vector2(right + .22f, height), .25f, Timber, decoration, -4);
+            var lintel = Beam("Hoist lintel", new Vector2(left - .22f, height), new Vector2(right + .22f, height), .25f, Timber, decoration, -4);
             Beam("Hoist knee brace", new Vector2(left, height - 1.22f), new Vector2(left + 1.05f, height), .16f, tint, decoration, -5);
             Beam("Hoist knee brace", new Vector2(right, height - 1.22f), new Vector2(right - 1.05f, height), .16f, tint, decoration, -5);
+            deck.transform.parent.gameObject.AddComponent<LiftSuspension>().Initialize(lintel, deck, width, top);
         }
         void Waterwheel(float x, float y, float radius)
         {
@@ -250,7 +286,7 @@ namespace Moonlit
             var baseY = y - radius - 2.7f;
             Beam("Waterwheel trestle", new Vector2(x - 1.6f, baseY), center, .27f, wood, decoration, -8);
             Beam("Waterwheel trestle", new Vector2(x + 1.6f, baseY), center, .27f, wood, decoration, -8);
-            var wheel = new GameObject("Guồng nước trúc").transform;
+            var wheel = new GameObject("Bamboo waterwheel").transform;
             wheel.SetParent(decoration); wheel.position = center;
             const int segments = 20;
             for (int i = 0; i < segments; i++)

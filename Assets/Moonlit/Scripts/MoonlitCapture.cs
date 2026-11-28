@@ -11,7 +11,7 @@ namespace Moonlit
         // Does not depend on a visible desktop, and does not alter source art.
         public static void Save(string path, int width = 1600, int height = 900)
         {
-            var camera = MoonlitGame.Instance.cameraRig.GetComponent<Camera>();
+            var camera = MoonlitGame.Instance.ViewCamera;
             var canvas = MoonlitGame.Instance.hud.GetComponent<Canvas>();
             var previousMode = canvas.renderMode; var previousCamera = canvas.worldCamera;
             float previousDistance = canvas.planeDistance;

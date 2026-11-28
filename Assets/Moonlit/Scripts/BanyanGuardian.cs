@@ -53,24 +53,24 @@ namespace Moonlit
             get {
                 switch (beat)
                 {
-                    case Beat.Waking: return "Nhìn thế rễ. Khi mầm hé vàng, tiến vào bùng đèn.";
-                    case Beat.Flowering: return "Mầm đã mở  ·  Đến gần và bấm J / X";
-                    case Beat.Resting: return lights % 2 == 0 ? "Một rễ đa đã dịu." : "Mầm đã nhận ánh trăng.";
-                    case Beat.Homecoming: return "Cây đa đã dịu lại. Trăng đang liền mảnh…";
+                    case Beat.Waking: return "Chờ nụ vàng hé mở rồi đến gần rọi đèn.";
+                    case Beat.Flowering: return $"Nụ đã mở! Đến gần, bấm {game.Controls.Label(GameAction.Lantern)} để rọi đèn.";
+                    case Beat.Resting: return lights % 2 == 0 ? "Một chiếc rễ đã nằm yên." : "Nụ đã sáng lên.";
+                    case Beat.Homecoming: return "Cây đa đã thôi vùng vẫy.";
                 }
                 switch (Attack)
                 {
-                    case Move.Charge: return "Rễ xung phong  ·  Lướt xuyên hoặc nhảy qua";
-                    case Move.HighSweep: return "Quét tán cao  ·  Giữ chân trên đất";
-                    case Move.LowSweep: return "Quét rễ thấp  ·  Nhảy qua hoặc lùi ra xa";
-                    default: return "Dậm gốc  ·  Rời dấu đất, nhảy qua sóng rễ";
+                    case Move.Charge: return "Cây sắp lao tới! Lướt qua hoặc nhảy tránh.";
+                    case Move.HighSweep: return "Cành quét ngang đầu. Đứng dưới cành!";
+                    case Move.LowSweep: return "Rễ quét sát đất. Nhảy qua!";
+                    default: return "Tránh chỗ đất sáng, rồi nhảy qua đợt rễ trồi lên.";
                 }
             }
         }
 
         public static BanyanGuardian Begin(MoonlitGame game, Vector2 treeFoot, Action onCalmed)
         {
-            var node = new GameObject("Cây Đa giữ trăng");
+            var node = new GameObject("Banyan Guardian");
             node.transform.SetParent(game.level.transform, false);
             node.transform.position = treeFoot;
             var boss = node.AddComponent<BanyanGuardian>();
@@ -178,7 +178,7 @@ namespace Moonlit
                 float forward = (player.x - BarkX) * direction;
                 float y = player.y - foot.y;
                 if (t > .12f && t < .78f && forward >= -.12f && forward <= span + .2f &&
-                    y < ZoneHeight + .46f && y + 1.50f > ZoneHeight - .35f) Hit(direction);
+                    y < ZoneHeight + .46f && y + game.player.ContactHeight - .05f > ZoneHeight - .35f) Hit(direction);
             }
         }
 
@@ -208,7 +208,7 @@ namespace Moonlit
             }
             if (lights == Phrases.Length)
             {
-                game.Toast("ĐA ƠI, VỀ NHÀ THÔI", "Bốn mảnh trăng đã nghe thấy nhau.");
+                game.Toast("SÁU NỤ ĐÃ NỞ", "Cuội hạ đèn. Cây đa đứng yên.");
                 Enter(Beat.Homecoming, 2.25f);
             }
             else Enter(Beat.Resting, lights % 2 == 0 ? 2.05f : 1.0f);

@@ -44,7 +44,7 @@ namespace Moonlit
                 else if (CanContinue)
                 {
                     var kb = Keyboard.current;
-                    if (kb != null && kb.spaceKey.wasPressedThisFrame) Continue();
+                    if (kb != null && game.Controls.Pressed(GameAction.Jump, kb)) Continue();
                 }
                 return;
             }
@@ -65,16 +65,16 @@ namespace Moonlit
             {
                 case 0:
                     Title = "Nhảy đôi";
-                    Description = "Nhảy lên, rồi bấm nhảy lần nữa gần đỉnh quỹ đạo để tới bậc trúc cao. Hai lượt nhảy hồi lại khi chân chạm đất.";
-                    Action = "SPACE   ·   SPACE"; break;
+                    Description = "Bậc tre cao quá một lần nhảy. Khi Cuội gần lên tới đỉnh, bấm nhảy thêm lần nữa.";
+                    Action = $"{game.Controls.Label(GameAction.Jump)} hai lần"; break;
                 case 1:
-                    Title = "Leo tường";
-                    Description = "Nhảy sát bờ kè có dây leo. Giữ hướng vào vách và giữ phím nhảy cho tới khi Cuội trèo qua mép.";
-                    Action = "GIỮ HƯỚNG VÀO VÁCH + SPACE"; break;
+                    Title = "Leo vách";
+                    Description = "Nhảy sát bờ kè. Giữ phím hướng vào vách cùng phím nhảy để Cuội leo lên. Buông phím nhảy để bám tại chỗ.";
+                    Action = $"Giữ hướng vào vách + {game.Controls.Label(GameAction.Jump)}"; break;
                 default:
                     Title = "Lướt";
-                    Description = "Chạy lấy đà và nhảy đôi ở mép khe. Bấm lướt khi còn trên không để tới bờ bên kia. Cuội lại lướt được sau khi tiếp đất.";
-                    Action = "SHIFT hoặc K   ·   LƯỚT"; break;
+                    Description = "Nhảy đôi từ mép đá rồi lướt qua khe. Mỗi lần chạm đất, Cuội lại có thể lướt thêm một lần trên không.";
+                    Action = $"{game.Controls.Label(GameAction.Dash)} để lướt"; break;
             }
             lastFocus = FocusPosition;
             game.BeginTutorial(); return true;

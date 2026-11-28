@@ -11,6 +11,57 @@ namespace Moonlit
         public static Sprite Glow { get; private set; }
         public static Sprite MoonMote { get; private set; }
         public static Material Material;
+        static Material banyanCanopy;
+        static readonly int TreePhase = Shader.PropertyToID("_TreePhase");
+
+        public static void AnimateBanyan(SpriteRenderer tree)
+        {
+            if (!banyanCanopy)
+            {
+                var shader = Resources.Load<Shader>("BanyanCanopy");
+                if (!shader || !shader.isSupported) return;
+                banyanCanopy = new Material(shader) { name = "Wind in the banyan crown" };
+            }
+            tree.sharedMaterial = banyanCanopy;
+            var properties = new MaterialPropertyBlock();
+            tree.GetPropertyBlock(properties);
+            properties.SetFloat(TreePhase, Mathf.Repeat(tree.transform.position.x * .19f, 6.28f));
+            tree.SetPropertyBlock(properties);
+        }
+
+        static readonly Dictionary<(Sprite, int), Sprite> bands = new Dictionary<(Sprite, int), Sprite>();
+
+        // Preserve the two ends; repeat the middle at a single pixel density in both axes.
+        public static Sprite TiledSprite(Sprite source, int capPercent)
+        {
+            var key = (source, capPercent);
+            if (bands.TryGetValue(key, out var band) && band) return band;
+            Rect r = source.rect;
+            int cap = Mathf.RoundToInt(r.width * capPercent / 100f);
+            band = UnityEngine.Sprite.Create(source.texture, r, Vector2.one * .5f, source.pixelsPerUnit, 0,
+                SpriteMeshType.FullRect, new Vector4(cap, 0, cap, 0), false);
+            band.name = source.name + " Modular Strip";
+            bands[key] = band;
+            return band;
+        }
+
+        public static void SizeBand(SpriteRenderer renderer, float width, float height)
+        {
+            float nativeHeight = renderer.sprite.rect.height / renderer.sprite.pixelsPerUnit;
+            float scale = height / nativeHeight;
+            renderer.drawMode = SpriteDrawMode.Tiled;
+            renderer.tileMode = SpriteTileMode.Continuous;
+            renderer.size = new Vector2(width / scale, nativeHeight);
+            renderer.transform.localScale = Vector3.one * scale;
+        }
+
+        public static SpriteRenderer Band(string name, Sprite source, Vector2 center, float width, float height,
+            int capPercent, Transform parent, int order)
+        {
+            var band = Sprite(name, TiledSprite(source, capPercent), center, parent, order);
+            SizeBand(band, width, height);
+            return band;
+        }
 
         public static void Init(Material material)
         {

@@ -44,7 +44,7 @@ namespace Moonlit
 
         static RiverAndSkyCreature Create(MoonlitGame game, Transform parent, WetlandSpecies species, Vector2 anchor)
         {
-            var node = new GameObject(species == WetlandSpecies.Fish ? "Cá chép • bến nước" : "Quạ • cành gác");
+            var node = new GameObject(species == WetlandSpecies.Fish ? "River Carp" : "Perched Crow");
             node.transform.SetParent(parent, false);
             node.transform.position = anchor;
             var animal = node.AddComponent<RiverAndSkyCreature>();
@@ -187,7 +187,7 @@ namespace Moonlit
             // Ellipse against the vertical core of Cuội's capsule. Fins, wingtips,
             // tails and the tip of his hat stay outside the damaging contact.
             float dx = (feet.x - BodyCenter.x) / (Carp ? .68f : .69f);
-            float y = Mathf.Clamp(BodyCenter.y, feet.y + .28f, feet.y + 1.23f);
+            float y = Mathf.Clamp(BodyCenter.y, feet.y + .28f, feet.y + game.player.ContactHeight - .32f);
             float dy = (y - BodyCenter.y) / (Carp ? .49f : .48f);
             if (dx * dx + dy * dy > 1) return;
             resolvedContact = true;

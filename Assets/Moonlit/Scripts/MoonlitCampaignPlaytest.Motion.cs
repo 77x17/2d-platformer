@@ -27,7 +27,8 @@ namespace Moonlit
 
         IEnumerator SetUpMotion(int chapter, Vector2 start, string folder)
         {
-            game.StartChapter(chapter);
+            game.StartChapter(chapter,false);
+            while (game.IsLoadingChapter) yield return null;
             game.player.TestInput = false; game.player.TestMove = 0;
             keyboard.MakeCurrent(); InputSystem.QueueStateEvent(keyboard, new KeyboardState());
             game.player.Teleport(start); game.cameraRig.Snap();
@@ -53,6 +54,22 @@ namespace Moonlit
             yield return SetUpMotion(1, new Vector2(177, .04f), folder);
             var p = game.player;
             var poses = new HashSet<Sprite>();
+            var idlePoses = new HashSet<Sprite>();
+            Vector2 idleStart = p.Body.position;
+            bool solesStayed = true, checkedLantern = false;
+            for (int i = 0; i < 228; i++)
+            {
+                yield return null;
+                idlePoses.Add(p.body.sprite);
+                if (i == 5) Capture(game, "motion-idle-breath");
+                if (!checkedLantern && p.body.sprite == game.art.Hero(3, 2))
+                {
+                    checkedLantern = true;
+                    Capture(game, "motion-idle-lantern");
+                }
+                solesStayed &= p.AnimationRow == 0 && p.Grounded && Vector2.Distance(p.Body.position, idleStart) < .025f;
+            }
+            Record("idle_breathes_on_planted_feet", idlePoses.Count == 7 && solesStayed && checkedLantern, $"{idlePoses.Count} standing poses, stable support={solesStayed}, raised lantern={checkedLantern}");
             var marks = new List<string> { "frame,event" };
             float previousX = p.Body.position.x, previousCycle = p.MotionCycle, right = 0, left = 0, cycleTravel = 0, stoppedTravel = 0, stoppedCycles = 0;
             bool floorContact = true, facing = true, photographed = false;
@@ -106,14 +123,17 @@ namespace Moonlit
             var poses = new HashSet<Sprite>();
             var marks = new List<string> { "frame,event" };
             bool jumped = false, released = false, resumed = false, landed = false, photographed = false, wallMatched = true;
-            var climbingLine = System.Array.Find(game.level.GetComponentsInChildren<SpriteRenderer>(), sr => sr.name == "Dây leo bện" && Mathf.Abs(sr.bounds.center.x - 24) < .1f);
+            var climbingLine = System.Array.Find(game.level.GetComponentsInChildren<SpriteRenderer>(), sr => sr.name == "Braided Wall Cord" && Mathf.Abs(sr.bounds.center.x - 24) < .1f);
             int holdFrame = -1, stableSamples = 0, wallSamples = 0, gripSamples = 0, crestFrame = -1;
-            int missedWall = 0, missedGrip = 0, missedCord = 0;
+            int missedWall = 0, missedGrip = 0, missedCord = 0, intactFrames = 0;
+            bool rigidArt = true;
             int mantleMask = 0, crestContacts = 0;
             Vector2 crestSole = Vector2.zero;
             bool plantedOnCrest = false, capturedMantle = false;
             float gripGap = 0, gripSlide = 0, gripY = 0;
-            int lastGrip = -1;
+            int lastGrip = -1, beltSamples = 0, previousWallFrame = -1;
+            Vector2 previousLantern = Vector2.zero;
+            float beltStep = 0;
             float heldMin = float.PositiveInfinity, heldMax = float.NegativeInfinity, heldPhase = 0, previousCycle = p.MotionCycle;
             float climbedMin = float.PositiveInfinity, climbedMax = float.NegativeInfinity;
             for (int i = 0; i < 150; i++)
@@ -125,6 +145,13 @@ namespace Moonlit
                 if (!landed && resumed && p.Grounded && p.Body.position.y >= 6.3f) { landed = true; crestFrame = i; marks.Add(i + ",crest"); }
                 if (landed && i == crestFrame + 12) InputSystem.QueueStateEvent(keyboard, new KeyboardState());
                 yield return null;
+                if (p.AnimationRow == 4 || p.AnimationRow == 5)
+                {
+                    intactFrames++;
+                    var material = p.body.sharedMaterial;
+                    rigidArt &= p.body.transform.localScale == Vector3.one &&
+                        material.GetVector("_BendA").sqrMagnitude < .00001f && material.GetVector("_BendB").sqrMagnitude < .00001f;
+                }
                 if ((p.AnimationRow == 4 || p.AnimationRow == 5) && p.AnimationFrame >= 8 && p.AnimationFrame <= 11)
                 {
                     mantleMask |= 1 << (p.AnimationFrame - 8);
@@ -173,14 +200,29 @@ namespace Moonlit
                         stableSamples++;
                     }
                 }
+                bool stroking = p.AnimationRow == 4 && p.AnimationFrame < 8 && p.IsClimbing && !p.IsWallHolding;
+                if (stroking)
+                {
+                    Vector2 relativeLantern = p.LanternPosition - (Vector2)p.transform.position;
+                    if (previousWallFrame >= 0 && previousWallFrame != p.AnimationFrame)
+                    {
+                        beltSamples++;
+                        beltStep = Mathf.Max(beltStep,Vector2.Distance(relativeLantern,previousLantern));
+                    }
+                    previousLantern = relativeLantern;
+                }
+                previousWallFrame = stroking ? p.AnimationFrame : -1;
                 previousCycle = p.MotionCycle;
                 MotionFrame(folder, i);
             }
             EndMotion(folder, marks);
             float ascent = climbedMax - climbedMin, hangDrift = heldMax - heldMin;
             wallMatched = missedWall == 0 && missedGrip == 0 && missedCord == 0;
+            Record("climb_preserves_painted_silhouette", intactFrames >= 20 && rigidArt, $"{intactFrames} unscaled climb, hang and mantle samples; zero UV bending={rigidArt}");
             Record("climb_contact_and_crest", landed && photographed && wallMatched && wallSamples >= 10 && ascent > 3 && poses.Count >= 3,
                 $"{wallSamples} wall samples, {poses.Count} climbing sprites, ascent={ascent:F2}u, crested={landed}, missed wall/grip/cord={missedWall}/{missedGrip}/{missedCord}");
+            Record("climb_lantern_continuity", beltSamples >= 4 && beltStep < .12f,
+                $"{beltSamples} sprite changes, largest relative lantern shift={beltStep:F3}u");
             Record("climb_grip_holds_pose", stableSamples >= 12 && hangDrift < .075f && heldPhase < .04f && resumed,
                 $"{stableSamples} held samples, body drift={hangDrift:F3}u, phase drift={heldPhase:F3}, resumed={resumed}");
             Record("climb_hand_on_wall", gripSamples >= 10 && gripGap < .18f && gripSlide < .21f, $"{gripSamples} hands on wall; max horizontal gap={gripGap:F3}u, vertical grip slide={gripSlide:F3}u");

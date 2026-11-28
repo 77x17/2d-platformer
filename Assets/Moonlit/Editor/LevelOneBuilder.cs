@@ -3,10 +3,8 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
-using UnityEditor.SceneManagement;
 using UnityEditor.U2D.Sprites;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Moonlit.Editor
 {
@@ -14,7 +12,7 @@ namespace Moonlit.Editor
     {
         const string Root = "Assets/Moonlit/";
 
-        [MenuItem("Moonlit/1 - Create or refresh level 1")]
+        [MenuItem("Moonlit/1 - Refresh Campaign Assets and Scene List")]
         public static void Setup()
         {
             var art = AssetDatabase.LoadAssetAtPath<MoonlitArt>(Root + "Settings/ArtLibrary.asset");
@@ -37,10 +35,7 @@ namespace Moonlit.Editor
             art.spriteMaterial = material; EditorUtility.SetDirty(art);
             var tuning = AssetDatabase.LoadAssetAtPath<PlayerTuning>(Root + "Settings/PlayerTuning.asset");
             if (!tuning) { tuning = ScriptableObject.CreateInstance<PlayerTuning>(); AssetDatabase.CreateAsset(tuning, Root + "Settings/PlayerTuning.asset"); }
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var root = new GameObject("CUOI - Level 01 bootstrap (settings below)"); var game = root.AddComponent<MoonlitGame>(); game.art = art; game.tuning = tuning;
-            EditorSceneManager.SaveScene(scene, Root + "Scenes/Level01_BanyanForest.unity");
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(Root + "Scenes/Level01_BanyanForest.unity", true) };
+            RegisterChapters();
             PlayerSettings.companyName = "Moonlit Studio"; PlayerSettings.productName = "Cuội Tìm Trăng";
             PlayerSettings.defaultScreenWidth = 1600; PlayerSettings.defaultScreenHeight = 900;
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed; PlayerSettings.resizableWindow = true; PlayerSettings.runInBackground = true;
@@ -52,7 +47,20 @@ namespace Moonlit.Editor
             tags.ApplyModifiedProperties();
             Physics2D.IgnoreLayerCollision(9, 9);
             AssetDatabase.SaveAssets();
-            Debug.Log("MOONLIT: Level 1 scene, sprites, settings and build list created.");
+            Debug.Log("MOONLIT: Home and four chapter scenes registered.");
+        }
+
+        static string[] RegisterChapters()
+        {
+            var paths = new[] { MoonlitHomeScene.SceneName }.Concat(MoonlitChapterScene.SceneNames)
+                .Select(name => Root + "Scenes/" + name + ".unity").ToArray();
+            foreach (string path in paths)
+                if (!AssetDatabase.LoadAssetAtPath<SceneAsset>(path))
+                    throw new FileNotFoundException("Campaign scene is missing", path);
+            var registered = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path);
+            if (!paths.SequenceEqual(registered))
+                EditorBuildSettings.scenes = paths.Select(path => new EditorBuildSettingsScene(path, true)).ToArray();
+            return paths;
         }
 
         static void Configure(TextureImporter importer)
@@ -181,21 +189,33 @@ namespace Moonlit.Editor
         }
 
         [MenuItem("Moonlit/2 - Build Windows executable")]
-        public static void Build()
+        public static void Build() => BuildPlayer(BuildTarget.StandaloneWindows64);
+
+        [MenuItem("Moonlit/5 - Build WebGL player")]
+        public static void BuildWeb() => BuildPlayer(BuildTarget.WebGL);
+
+        static void BuildPlayer(BuildTarget target)
         {
-            if (!File.Exists(Root + "Scenes/Level01_BanyanForest.unity")) Setup();
+            bool web = target == BuildTarget.WebGL;
+            if (web) PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            var args = Environment.GetCommandLineArgs();
+            int option = Array.IndexOf(args, "-moonlitBuildPath");
+            if (option >= 0 && (option + 1 >= args.Length || args[option + 1].StartsWith("-")))
+                throw new ArgumentException("Expected an output directory after -moonlitBuildPath.");
+            string directory = option < 0 ? (web ? "Build/Web" : "Build/PC") : args[option + 1];
+            string location = web ? directory : Path.Combine(directory, "Cuoi.exe");
+            var chapters = RegisterChapters();
             PreparePolishAssets();
-            Directory.CreateDirectory("Builds/CuoiTimTrang-Windows");
+            Directory.CreateDirectory(directory);
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray(),
-                locationPathName = "Builds/CuoiTimTrang-Windows/Cuoi.exe", target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.None
+                scenes = chapters, locationPathName = location, target = target, options = BuildOptions.None
             });
             Directory.CreateDirectory("QA");
-            File.WriteAllText("QA/build-result.txt", $"Result: {report.summary.result}\nErrors: {report.summary.totalErrors}\nWarnings: {report.summary.totalWarnings}\nBytes: {report.summary.totalSize}\nDuration: {report.summary.totalTime}\n");
-            if (report.summary.result != BuildResult.Succeeded) throw new Exception("Windows build failed: " + report.summary.result);
-            Debug.Log("MOONLIT_BUILD_OK: Builds/CuoiTimTrang-Windows/Cuoi.exe");
+            string log = web ? "QA/web-build-result.txt" : "QA/build-result.txt";
+            File.WriteAllText(log, $"Result: {report.summary.result}\nErrors: {report.summary.totalErrors}\nWarnings: {report.summary.totalWarnings}\nBytes: {report.summary.totalSize}\nDuration: {report.summary.totalTime}\n");
+            if (report.summary.result != BuildResult.Succeeded) throw new Exception(target + " build failed: " + report.summary.result);
+            Debug.Log("MOONLIT_BUILD_OK: " + location);
         }
 
         [MenuItem("Moonlit/3 - Import forest additions (preserve existing art)")]

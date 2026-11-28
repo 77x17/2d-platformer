@@ -11,6 +11,8 @@ Cuội nhặt mảnh trăng thứ tư, hồi đầy ba tim và gặp Cây Đa ng
 
 Cây dạy riêng từng đòn xung phong và dậm gốc trong hai lần mở mầm đầu. Rễ thứ hai phối thấp–cao và xung phong–dậm. Rễ cuối dùng thấp–cao–thấp, tiếp theo là hai lượt xung phong đổi chiều rồi dậm gốc. Mỗi đòn có thế lấy đà riêng. Mỗi lần hở thế kéo dài 5,25 giây. Mầm nở cao dần trên thân, ở ngay vị trí cây dừng chân.
 
+Trong cảnh trăng vỡ và lúc chờ Cuội ở đấu trường, Cây Đa nhấc nhánh trái, nhún tán rồi đáp lại bằng nhánh phải. Rễ khí sinh đưa theo sau nhịp cành, mắt gỗ chớp khẽ còn rễ bệ bám đất. Khi cây lấy đà hoặc ra đòn, cành thu nhịp để người chơi thấy rõ hướng đánh. Chuyển động dùng trực tiếp các điểm ảnh trên sprite đã ghi nguồn bên dưới. [Các thế chuyển động](../Assets/Moonlit/Resources/BanyanPose.cginc)
+
 ## Nguồn thiết kế
 
 Tham khảo cách Hand of the King trong *Dead Cells* báo trước hướng xông, nối đòn đánh và phát sóng mặt đất. Cây Đa có hình, chuyển động, âm thanh và điều kiện chiến thắng viết riêng cho Cuội. [Motion Twin giới thiệu Hand of the King](https://www.youtube.com/watch?v=d1fobWYpmd4) · [Các đòn của Hand of the King](https://deadcells.wiki.gg/wiki/Hand_of_the_King)

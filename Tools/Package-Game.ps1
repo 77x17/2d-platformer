@@ -3,7 +3,7 @@
 param()
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$playerDir = Join-Path $projectRoot 'Builds\CuoiTimTrang-Windows'
+$playerDir = Join-Path $projectRoot 'Build\PC'
 if (!(Test-Path -LiteralPath (Join-Path $playerDir 'Cuoi_Data\Managed\Assembly-CSharp.dll'))) {
     throw 'Build the Windows player before packaging.'
 }
@@ -23,6 +23,12 @@ $credits = @(
     'Documentation\campaign-ui-sources.json',
     'Documentation\GUARDIAN_AUDIO_CREDITS.md',
     'Documentation\BANYAN_DUEL.md',
+    'Documentation\MOON_CROSSINGS.md',
+    'Assets\Moonlit\Art\Cuoi.png',
+    'Assets\Moonlit\Resources\CuoiCrouch.png',
+    'Assets\Moonlit\Resources\FourLandsAtNight.png',
+    'Assets\Moonlit\Art\ForestExtras.png',
+    'Assets\Moonlit\Art\Environment.png',
     'Assets\Moonlit\Resources\BanyanGuardian.png',
     'Assets\Moonlit\Resources\BanyanRootArm.png',
     'Documentation\WETLAND_CREATURE_CREDITS.md',
@@ -39,7 +45,11 @@ foreach ($relative in $credits) {
     Copy-Item -LiteralPath (Join-Path $projectRoot $relative) -Destination $distributionFile -Force
 }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$zipPath = Join-Path $projectRoot 'Builds\CuoiTimTrang-2.1.0-Windows-x64.zip'
+$settings = Get-Content -LiteralPath (Join-Path $projectRoot 'ProjectSettings\ProjectSettings.asset') -Raw
+$version = [regex]::Match($settings, '(?m)^\s*bundleVersion:\s*(\d+\.\d+\.\d+)\s*$').Groups[1].Value
+if (!$version) { throw 'Missing release version in Unity player settings.' }
+$archiveDir = [IO.Directory]::CreateDirectory((Join-Path $projectRoot 'Builds')).FullName
+$zipPath = Join-Path $archiveDir "CuoiTimTrang-$version-Windows-x64.zip"
 $zipTemp = "$zipPath.$([guid]::NewGuid().ToString('N')).tmp"
 $archive = [IO.Compression.ZipFile]::Open($zipTemp, [IO.Compression.ZipArchiveMode]::Create)
 try {

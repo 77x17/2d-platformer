@@ -6,8 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Moonlit/Scenes/Level01_BanyanForest.unity
+    path: Assets/Moonlit/Scenes/00_Home.unity
+    guid: 23380e1690734105b6178b69b045c6a4
+  - enabled: 1
+    path: Assets/Moonlit/Scenes/01_Bamboo_Village.unity
     guid: 9b095b623b0442048b5fcbdc876de46b
+  - enabled: 1
+    path: Assets/Moonlit/Scenes/02_Bamboo_Forest.unity
+    guid: 5348fd47861e422e804867154e4ffa42
+  - enabled: 1
+    path: Assets/Moonlit/Scenes/03_Lantern_River.unity
+    guid: f3f1facf04444ba282088751a98ef668
+  - enabled: 1
+    path: Assets/Moonlit/Scenes/04_Banyan_Hill.unity
+    guid: c36ef6142a6c45a0a023ad99cf8fa36b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

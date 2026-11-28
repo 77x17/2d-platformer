@@ -46,6 +46,7 @@ namespace Moonlit
             Physics2D.SyncTransforms();
             var scenery = game.level.GetComponentsInChildren<SpriteRenderer>();
             var block = new MaterialPropertyBlock();
+            var waterShader = Resources.Load<Shader>("RiverSurface");
             int fish = 0, crows = 0, placed = 0;
             foreach (var animal in game.level.Wildlife)
             {
@@ -56,7 +57,7 @@ namespace Moonlit
                     fish++;
                     foreach (var sprite in scenery)
                     {
-                        if (sprite.name != "Dòng nước" || at.x < sprite.bounds.min.x || at.x > sprite.bounds.max.x) continue;
+                        if (!sprite.sharedMaterial || sprite.sharedMaterial.shader != waterShader || at.x < sprite.bounds.min.x || at.x > sprite.bounds.max.x) continue;
                         sprite.GetPropertyBlock(block);
                         if (Mathf.Abs(block.GetVector("_Waterline").x - at.y) > .09f) continue;
                         supported = !Physics2D.OverlapPoint(at, 1 << 8) &&
@@ -94,16 +95,18 @@ namespace Moonlit
             bool valid = terrain && terrain.MeshCount > 0 && terrain.JoinedEdges > 0 && terrain.ExposedEdges > 0 &&
                 terrain.ExposedEdges + terrain.JoinedEdges == 2 * terrain.MeshCount;
             int observed = 0;
+            var terrainShader = Resources.Load<Shader>("TerrainRelief");
             foreach (var filter in game.level.GetComponentsInChildren<MeshFilter>())
             {
                 var mesh = filter.sharedMesh;
-                if (!mesh || !mesh.name.StartsWith("Địa tầng ")) continue;
+                var renderer = filter.GetComponent<MeshRenderer>();
+                if (!mesh || !renderer || !renderer.sharedMaterial || renderer.sharedMaterial.shader != terrainShader) continue;
                 observed++;
                 var bounds = mesh.bounds;
                 valid &= bounds.size.x > .1f && bounds.size.y > .1f && mesh.vertexCount >= 12 && mesh.uv2.Length == mesh.vertexCount;
                 foreach (var vertex in mesh.vertices)
                     valid &= !float.IsNaN(vertex.sqrMagnitude) && !float.IsInfinity(vertex.sqrMagnitude);
-                var surface = filter.GetComponent<MeshRenderer>().sharedMaterial;
+                var surface = renderer.sharedMaterial;
                 valid &= surface && surface.shader.isSupported;
             }
             Record("terrain_treads_" + chapter, valid && terrain && observed == terrain.MeshCount,
@@ -166,6 +169,7 @@ namespace Moonlit
         IEnumerator FilmWildlife(string frames, int chapter)
         {
             game.StartChapter(chapter);
+            while (game.IsLoadingChapter) yield return null;
             var p = game.player;
             var animal = game.level.Wildlife[0];
             p.TestInput = true; p.TestMove = 0;

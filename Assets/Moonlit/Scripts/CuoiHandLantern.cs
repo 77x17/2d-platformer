@@ -29,7 +29,7 @@ namespace Moonlit
             hook = new GameObject("Bamboo handle").transform;
             hook.SetParent(actor.transform, false);
             var sprite = Resources.Load<Sprite>("StarLantern");
-            paper = Visuals.Sprite("Đèn ông sao", sprite, Vector2.zero, hook, actor.sortingOrder + 2);
+            paper = Visuals.Sprite("Star Lantern", sprite, Vector2.zero, hook, actor.sortingOrder + 2);
             const float height = .57f;
             paper.transform.localScale = Vector3.one * (height / sprite.bounds.size.y);
             paper.transform.localPosition = Vector3.down * (height * .47f);
@@ -51,7 +51,9 @@ namespace Moonlit
             float pixel = s.texture.width / (1254f * s.pixelsPerUnit);
             cutout.localScale = new Vector3(64 * pixel, 79 * pixel, 1);
             cutout.localPosition = new Vector2(right ? anchor.x : -anchor.x, anchor.y - 39.5f * pixel);
-            return Hang(anchor, right, pulse, Mathf.Sin(Time.time * 9f) * Mathf.Clamp(speed, 0, 6f) * .75f, false);
+            float swing = row == 0 ? Mathf.Sin(Time.time * 6.68f - .55f) * 2.6f :
+                Mathf.Sin(Time.time * 9f) * Mathf.Clamp(speed, 0, 6f) * .75f;
+            return Hang(anchor, right, pulse, swing, false);
         }
 
         public Vector2 MotionPose(Vector2 anchor, bool right, float pulse, float cycle, bool onWall, bool holding)

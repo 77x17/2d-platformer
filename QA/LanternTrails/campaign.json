@@ -1,0 +1,11 @@
+{
+    "build": "2.7.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "continuous_four_chapter_route",
+            "detail": "L1(125.7s,motes=1,cp=6,falls=0,jumps=42,air=0,climb=0.0,dash=0) L2(140.9s,motes=2,cp=6,falls=0,jumps=71,air=30,climb=0.0,dash=0) L3(123.5s,motes=0,cp=6,falls=0,jumps=32,air=7,climb=31.9,dash=0) L4(118.1s,motes=1,cp=6,falls=0,jumps=40,air=12,climb=16.6,dash=7)",
+            "passed": true
+        }
+    ]
+}

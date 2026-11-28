@@ -1,0 +1,56 @@
+{
+    "build": "2.2.1 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "four_piece_intro",
+            "detail": "Prologue",
+            "passed": true
+        },
+        {
+            "name": "skip_intro",
+            "detail": "Playing",
+            "passed": true
+        },
+        {
+            "name": "bamboo_spikes_respawn",
+            "detail": "hearts=2",
+            "passed": true
+        },
+        {
+            "name": "weight_starts_locked_1",
+            "detail": "new entry",
+            "passed": true
+        },
+        {
+            "name": "crossing_1",
+            "detail": "L1 Playing pos=(344.08, 0.35) vel=(6.00, 0.00) hp=2 cp=0 support=27 target=-1 elapsed=8.6 ground=True crate=(118.00, 0.68)",
+            "passed": true
+        },
+        {
+            "name": "crossing_2",
+            "detail": "L2 Playing pos=(392.47, 6.90) vel=(0.00, 0.00) hp=3 cp=0 support=-1 target=-1 elapsed=4.0 ground=True crate=",
+            "passed": true
+        },
+        {
+            "name": "sluice_needs_crew",
+            "detail": "shore pulse",
+            "passed": true
+        },
+        {
+            "name": "crossing_3",
+            "detail": "L3 Playing pos=(506.10, 4.35) vel=(6.00, 0.00) hp=3 cp=0 support=41 target=-1 elapsed=9.7 ground=True crate=",
+            "passed": true
+        },
+        {
+            "name": "weight_starts_locked_4",
+            "detail": "new entry",
+            "passed": true
+        },
+        {
+            "name": "crossing_4",
+            "detail": "L4 Playing pos=(347.41, 8.85) vel=(0.00, 0.00) hp=3 cp=5 support=-1 target=-1 elapsed=7.0 ground=True crate=",
+            "passed": true
+        }
+    ]
+}

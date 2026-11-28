@@ -27,7 +27,8 @@ namespace Moonlit
             g.tutorials.Enabled = false;
             output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../QA")); Directory.CreateDirectory(output);
             yield return new WaitForSeconds(1);
-            g.StartRun(); g.player.TestInput = true;
+            g.StartChapter(1,false); while (g.IsLoadingChapter) yield return null;
+            g.player.TestInput = true;
             yield return new WaitForSeconds(.5f);
             CheckResult("coyote_setting", Mathf.Abs(g.tuning.coyoteTime - .10f) < .001f, "Grace window = " + g.tuning.coyoteTime);
             yield return CoyoteTrial(2, true);
@@ -97,7 +98,7 @@ namespace Moonlit
             }
 
             CheckResult("crate_mechanic_removed", FindObjectsByType<PushableCrate>(FindObjectsSortMode.None).Length == 0, "No crate or plate in the playable scene");
-            g.StartRun(); yield return new WaitForSeconds(.2f);
+            g.StartChapter(1,false); yield return new WaitForSeconds(.2f);
             CheckResult("restart_resets_wind", g.wind.GustCount == 0, "Restart restores event state");
             report.passed = report.checks.TrueForAll(c => c.passed);
             File.WriteAllText(Path.Combine(output, "polish-results.json"), JsonUtility.ToJson(report, true));

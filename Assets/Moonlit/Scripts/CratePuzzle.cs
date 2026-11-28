@@ -49,6 +49,7 @@ namespace Moonlit
     {
         public PushableCrate crate;
         public Transform bridge;
+        public Transform hinge;
         public BoxCollider2D bridgeCollider;
         public SpriteRenderer plate;
         public Vector2 plateCenter;
@@ -58,7 +59,7 @@ namespace Moonlit
         public float Progress => progress;
         float progress;
         Vector3 down;
-        void Start() { down = bridge.position; ResetPuzzle(); }
+        void Start() { if (bridge) down = bridge.position; ResetPuzzle(); }
         void Update()
         {
             var g = MoonlitGame.Instance;
@@ -67,21 +68,29 @@ namespace Moonlit
             {
                 Activated = true; crate.Dock(new Vector2(plateCenter.x, floorY + .68f));
                 g.effects.Ring(plateCenter, Visuals.Gold, 2);
-                g.effects.Burst(plateCenter, Visuals.Gold, 24, 2); g.audioFx.Play("checkpoint");
-                g.Toast("CẦU GỖ ĐÃ HẠ", "Thùng giữ bàn đạp. Nhảy qua thùng rồi đi tiếp.");
+                g.effects.Burst(plateCenter, Visuals.Gold, 24, 2); g.audioFx.Play("woodLatch");
+                g.Toast("CẦU ĐANG HẠ", hinge ? "Chờ nhịp cầu chạm bờ đá rồi đi qua." : "Nhảy lên thùng rồi bước sang cầu.");
             }
-            if (Activated)
+            if (Activated && progress < 1)
             {
                 progress = Mathf.MoveTowards(progress, 1, Time.deltaTime / .85f);
-                bridge.position = down + Vector3.up * (3.5f * (1 - Mathf.SmoothStep(0, 1, progress)));
+                PoseBridge(progress);
+                if (progress >= 1) g.audioFx.Play("deckSettle");
                 plate.color = Color.Lerp(Color.white, Visuals.Gold, progress);
-                bridgeCollider.enabled = Open;
+                if (bridgeCollider) bridgeCollider.enabled = Open;
             }
         }
+        void PoseBridge(float travel)
+        {
+            float closed = 1 - Mathf.SmoothStep(0,1,travel);
+            if (hinge) hinge.localRotation = Quaternion.Euler(0,0,72f * closed);
+            else if (bridge) bridge.position = down + Vector3.up*(3.5f*closed);
+        }
+
         public void ResetPuzzle()
         {
-            Activated = false; progress = 0; bridgeCollider.enabled = false;
-            bridge.position = down + Vector3.up * 3.5f;
+            Activated = false; progress = 0; if (bridgeCollider) bridgeCollider.enabled = false;
+            PoseBridge(0);
             if (plate) plate.color = Color.white;
             if (crate) crate.ResetCrate();
         }

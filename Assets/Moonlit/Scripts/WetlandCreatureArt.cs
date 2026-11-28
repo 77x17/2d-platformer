@@ -22,19 +22,19 @@ namespace Moonlit
             carp = kind == WetlandSpecies.Fish;
             anchor = parent.position;
             frames = carp ? (carpFrames ??= Frames("BronzeCarp")) : (crowFrames ??= Frames("MidnightCrow"));
-            body = Visuals.Sprite(carp ? "Vảy đồng" : "Lông cánh chàm", frames[0], anchor, parent, carp ? -3 : 12);
+            body = Visuals.Sprite(carp ? "Bronze Carp Scales" : "Indigo Crow Wings", frames[0], anchor, parent, carp ? -3 : 12);
             for (int i = 0; i < sparks.Length; i++)
             {
-                sparks[i] = Visuals.Sprite("Tia đèn", Visuals.MoonMote, anchor, parent, 18, .18f);
+                sparks[i] = Visuals.Sprite("Lantern Spark", Visuals.MoonMote, anchor, parent, 18, .18f);
                 sparks[i].enabled = false;
                 if (carp)
                 {
-                    cue[i] = Visuals.Box("Bọt nước", anchor, new Vector2(.06f, .09f), RippleColor, parent, 17);
+                    cue[i] = Visuals.Box("Water Bubble", anchor, new Vector2(.06f, .09f), RippleColor, parent, 17);
                     cue[i].transform.rotation = Quaternion.Euler(0, 0, 37);
                 }
                 else
                 {
-                    cue[i] = Visuals.Box("Vệt gió", anchor, new Vector2(.06f, .23f), WarningGold, parent, 17);
+                    cue[i] = Visuals.Box("Air Streak", anchor, new Vector2(.06f, .23f), WarningGold, parent, 17);
                     cue[i].transform.rotation = Quaternion.Euler(0, 0, (i - 1) * -27);
                 }
                 cue[i].enabled = false;
@@ -42,7 +42,7 @@ namespace Moonlit
             rings = new LineRenderer[carp ? 2 : 1];
             for (int i = 0; i < rings.Length; i++)
             {
-                var ring = new GameObject(carp ? "Gợn mặt sông" : "Dấu sà xuống");
+                var ring = new GameObject(carp ? "Surface Ripple" : "Dive Warning");
                 ring.transform.SetParent(parent, false);
                 var line = ring.AddComponent<LineRenderer>();
                 line.useWorldSpace = false; line.loop = true; line.positionCount = 24;
@@ -74,8 +74,7 @@ namespace Moonlit
             body.flipX = facing < 0;
             float tilt = stunned ? Mathf.Cos(time * 4) * 5 : 0;
             body.transform.localRotation = Quaternion.Euler(0, 0, tilt);
-            float breath = .012f * Mathf.Sin(time * 3.2f);
-            body.transform.localScale = new Vector3(1 - breath, 1 + breath, 1);
+            body.transform.localScale = Vector3.one;
             body.color = stunned ? Spearmint : carp && center.y < anchor.y ? ShallowWater : Color.white;
             for (int i = 0; i < sparks.Length; i++)
             {

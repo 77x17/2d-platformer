@@ -42,10 +42,10 @@ namespace Moonlit
                     if (random.NextDouble() < (stage == 3 ? .49 : .18)) continue;
                     float inset = .46f + (float)random.NextDouble() * .42f;
                     var foot = new Vector2(edge - side * inset, center.y - .045f);
-                    var reed = Visuals.Sprite("Cỏ bờ nước", MarshPlant(random.Next(3)), foot, decoration, 1,
+                    var reed = Visuals.Sprite("Waterline Reeds", MarshPlant(random.Next(3)), foot, decoration, 1,
                         1.03f + .69f * (float)random.NextDouble());
                     reed.color = new Color(.76f,.84f,.83f); reed.flipX = side < 0;
-                    contacts.Add(new GroundContact { art = reed, localY = 0 });
+                    contacts.Add(new GroundContact { art = reed, paintedFeet = new[] { PaintedPoint(reed.sprite, .5f, .024f) } });
                     var breeze = reed.gameObject.AddComponent<AmbientMotion>();
                     breeze.sway = 2; breeze.speed = .88f; breeze.phase = edge; breeze.windAffected = true;
                 }
@@ -55,7 +55,7 @@ namespace Moonlit
                 x += 5.5f + (float)random.NextDouble() * 7)
             {
                 if (!OpenWater(x, waterY, .95f)) continue;
-                var pads = Visuals.Sprite("Lá nổi trên dòng", MarshPlant(3 + random.Next(3)),
+                var pads = Visuals.Sprite("Floating Leaves", MarshPlant(3 + random.Next(3)),
                     new Vector2(x, waterY - .08f), decoration, -3, 1.05f + .62f * (float)random.NextDouble());
                 pads.color = new Color(.77f,.84f,.85f); pads.flipX = random.Next(2) == 1;
                 var drift = pads.gameObject.AddComponent<AmbientMotion>();

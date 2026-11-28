@@ -1,0 +1,56 @@
+{
+    "build": "2.6.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "idle_breathes_on_planted_feet",
+            "detail": "7 standing poses, stable support=True, raised lantern=True",
+            "passed": true
+        },
+        {
+            "name": "run_pose_and_reversal",
+            "detail": "right=8.64u, left=7.80u, 8 rendered poses, 5.39 strides, 82 grounded samples",
+            "passed": true
+        },
+        {
+            "name": "run_stops_with_feet",
+            "detail": "stopped drift=0.000u, phase drift=0.000",
+            "passed": true
+        },
+        {
+            "name": "run_planted_sole",
+            "detail": "62 soles on terrain; max vertical gap=0.027u, horizontal slide during stance=0.000u",
+            "passed": true
+        },
+        {
+            "name": "climb_preserves_painted_silhouette",
+            "detail": "73 unscaled climb, hang and mantle samples; zero UV bending=True",
+            "passed": true
+        },
+        {
+            "name": "climb_contact_and_crest",
+            "detail": "44 wall samples, 11 climbing sprites, ascent=5.18u, crested=True, missed wall/grip/cord=0/0/0",
+            "passed": true
+        },
+        {
+            "name": "climb_lantern_continuity",
+            "detail": "21 sprite changes, largest relative lantern shift=0.095u",
+            "passed": true
+        },
+        {
+            "name": "climb_grip_holds_pose",
+            "detail": "18 held samples, body drift=0.000u, phase drift=0.000, resumed=True",
+            "passed": true
+        },
+        {
+            "name": "climb_hand_on_wall",
+            "detail": "33 hands on wall; max horizontal gap=0.065u, vertical grip slide=0.149u",
+            "passed": true
+        },
+        {
+            "name": "mantle_over_lip",
+            "detail": "observed pose mask=15/15, 6 planted pose samples, sole=(24.440, 6.412), touched upper bank=True",
+            "passed": true
+        }
+    ]
+}

@@ -1,0 +1,56 @@
+{
+    "build": "2.7.0 / Unity 6000.3.16f1",
+    "passed": true,
+    "checks": [
+        {
+            "name": "lantern_meter_under_feet",
+            "detail": "ready hidden=True, below feet while charging=True, follows jump=True, hidden in pause=True",
+            "passed": true
+        },
+        {
+            "name": "idle_tempo_and_contacts",
+            "detail": "poses=7; longest uninterrupted pose=0.30s; foot drift=0.000",
+            "passed": true
+        },
+        {
+            "name": "crouch_s_under_low_ceiling",
+            "detail": "S lowers art and contact shape=True; release under beam=True; stood after clearance=True",
+            "passed": true
+        },
+        {
+            "name": "rebound_down_reaches_controller",
+            "detail": "rebound S to C=True; S inactive=True; C crouched=True",
+            "passed": true
+        },
+        {
+            "name": "drop_to_next_platform_once",
+            "detail": "on authored upper perch=True; held Down Arrow stopped at lower deck=True; fresh S left lower deck=True",
+            "passed": true
+        },
+        {
+            "name": "opening_tree_gathers_branches",
+            "detail": "changed body samples=3171, changed root-foot samples=0, pose clock=0.24",
+            "passed": true
+        },
+        {
+            "name": "three_lantern_bridge_3",
+            "detail": "locked for first two lights=True, submerged=True, staggered and rocking=True, solid at bank=True, reset=True",
+            "passed": true
+        },
+        {
+            "name": "three_lantern_bridge_4",
+            "detail": "locked for first two lights=True, submerged=True, staggered and rocking=True, solid at bank=True, reset=True",
+            "passed": true
+        },
+        {
+            "name": "arena_tree_gathers_branches",
+            "detail": "changed body samples=2877, changed root-foot samples=0, pose clock=0.27",
+            "passed": true
+        },
+        {
+            "name": "guardian_windup_readable",
+            "detail": "Cây sắp lao tới! Lướt qua hoặc nhảy tránh.",
+            "passed": true
+        }
+    ]
+}

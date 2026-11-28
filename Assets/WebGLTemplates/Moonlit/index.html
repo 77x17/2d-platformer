@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="moonlit-portable" content="1">
+  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{{ PRODUCT_NAME }}}</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { display: grid; place-items: center; overflow: hidden; background: #0b141b; color: #fff2d8; font: 16px/1.4 system-ui, sans-serif; }
+    main { position: relative; width: min(100vw, 177.7778vh); aspect-ratio: 16 / 9; background: #101e27; }
+    canvas { width: 100%; height: 100%; display: block; outline: none; }
+    #loading { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: .8rem; padding: 1.5rem; text-align: center; }
+    #loading[hidden] { display: none; }
+    h1 { margin: 0; font: 500 clamp(2rem, 5vw, 4rem)/1.1 Georgia, serif; }
+    progress { width: min(17rem,70vw); height: .6rem; accent-color: #f0b75b; }
+    p { margin: 0; }
+    button { padding: .5rem 1.2rem; font: inherit; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <canvas id="unity-canvas" width="1280" height="720" tabindex="0" aria-label="{{{ PRODUCT_NAME }}}"></canvas>
+    <section id="loading" role="status">
+      <h1>Cuội Tìm Trăng</h1>
+      <progress max="1" value="0" aria-label="Tiến độ tải"></progress>
+      <p id="status">Đang tải trò chơi…</p>
+      <button id="retry" type="button" hidden>Tải lại</button>
+    </section>
+  </main>
+  <script>
+    const canvas = document.getElementById("unity-canvas");
+    const statusText = document.getElementById("status");
+    const progress = document.querySelector("progress");
+    function failed(error) {
+      console.error(error);
+      progress.hidden = true;
+      statusText.textContent = "Không mở được trò chơi. Hãy giữ index.html cạnh thư mục Build và mở bằng trình duyệt hỗ trợ WebGL 2.";
+      const retry = document.getElementById("retry");
+      retry.hidden = false;
+      retry.onclick = () => location.reload();
+    }
+
+    // Classic scripts can deliver the packaged bytes from a local folder as well as over HTTP.
+    const payloads = new WeakMap();
+    window.moonlitWebFiles = {
+      decode(base64) {
+        if (typeof Uint8Array.fromBase64 === "function") return Uint8Array.fromBase64(base64);
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+      },
+      accept(script, parts) {
+        payloads.set(script, new Blob(parts, { type: "application/octet-stream" }));
+      }
+    };
+
+    function readPayload(path) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.onload = () => {
+          const blob = payloads.get(script);
+          payloads.delete(script);
+          script.remove();
+          if (blob && blob.size) resolve(URL.createObjectURL(blob));
+          else reject(new Error("Không đọc được dữ liệu trong " + path));
+        };
+        script.onerror = () => {
+          script.remove();
+          reject(new Error("Không tải được " + path));
+        };
+        script.src = path;
+        document.head.appendChild(script);
+      });
+    }
+  </script>
+  <script src="Build/{{{ LOADER_FILENAME }}}" onerror="failed('Không tải được bộ khởi động Unity.')"></script>
+  <script>
+    async function play() {
+      if (typeof createUnityInstance !== "function") return;
+      const files = {
+        frameworkUrl: "Build/{{{ FRAMEWORK_FILENAME }}}.js",
+        codeUrl: "Build/{{{ CODE_FILENAME }}}.js",
+        dataUrl: "Build/{{{ DATA_FILENAME }}}.js"
+      };
+      const config = {
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5)
+      };
+      const urls = [];
+      try {
+        progress.removeAttribute("value");
+        statusText.textContent = "Đang đọc dữ liệu trò chơi…";
+        for (const [key, path] of Object.entries(files)) {
+          config[key] = await readPayload(path);
+          urls.push(config[key]);
+        }
+        statusText.textContent = "Đang vào trò chơi…";
+        progress.value = 0;
+        await createUnityInstance(canvas, config, value => { progress.value = value; });
+        document.getElementById("loading").hidden = true;
+        canvas.focus();
+      } catch (error) {
+        failed(error);
+      } finally {
+        for (const url of urls) URL.revokeObjectURL(url);
+        delete window.moonlitWebFiles;
+      }
+    }
+    play();
+  </script>
+</body>
+</html>

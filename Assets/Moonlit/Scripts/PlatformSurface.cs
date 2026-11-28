@@ -7,6 +7,7 @@ namespace Moonlit
     public sealed class PlatformSurface : MonoBehaviour
     {
         public bool timber;
+        public bool overhead;
         static readonly Dictionary<Sprite, Sprite> lips = new Dictionary<Sprite, Sprite>();
 
         public static void AddMossLip(SpriteRenderer surface)

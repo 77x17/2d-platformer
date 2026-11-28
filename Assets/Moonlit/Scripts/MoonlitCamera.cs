@@ -53,7 +53,7 @@ namespace Moonlit
             activeChapter = chapter;
             if (scenery) { scenery.gameObject.SetActive(false); Destroy(scenery.gameObject); }
             ReleaseSprites();
-            scenery = new GameObject("Parallax • " + MoonlitGame.ChapterName(chapter)).transform;
+            scenery = new GameObject("Chapter " + chapter + " Parallax").transform;
             scenery.SetParent(transform, false);
 
             var horizon = Resources.Load<Texture2D>("Scenery" + chapter);
@@ -62,10 +62,10 @@ namespace Moonlit
             var edge = Resources.Load<Texture2D>("EdgeHabitat");
             int c = chapter - 1;
             // Y coordinates are measured down from the top of the 941-pixel art master.
-            planes[0] = Slice(horizon, 0, 940, "Chân trời");
-            planes[1] = Slice(landscape, 0, MiddleBottom[c], "Bờ xa và công trình trên nền");
-            planes[2] = Slice(landscape, BankTop[c], 940, "Bờ gần");
-            planes[3] = Slice(edge, EdgeTop[c], EdgeBottom[c], "Mép đất trước ống kính");
+            planes[0] = Slice(horizon, 0, 940, "Horizon");
+            planes[1] = Slice(landscape, 0, MiddleBottom[c], "Far Bank and Village");
+            planes[2] = Slice(landscape, BankTop[c], 940, "Near Bank");
+            planes[3] = Slice(edge, EdgeTop[c], EdgeBottom[c], "Foreground Foliage");
             if (planes[1])
             {
                 // Water samples the same illustrated bank as the camera, including the alpha skyline.
@@ -111,7 +111,11 @@ namespace Moonlit
             for (int band = 0; band < planes.Length; band++)
                 if (planes[band]) { Destroy(planes[band]); planes[band] = null; }
         }
-        void OnDestroy() => ReleaseSprites();
+        void OnDestroy()
+        {
+            if (scenery) Destroy(scenery.gameObject);
+            ReleaseSprites();
+        }
 
         Vector3 Desired(float look)
         {

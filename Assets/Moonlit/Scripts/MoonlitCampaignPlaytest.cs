@@ -57,9 +57,12 @@ namespace Moonlit
         {
             game = MoonlitGame.Instance;
             var args = Environment.GetCommandLineArgs();
+            bool lanternUpdate = Array.IndexOf(args, "-moonlitLanternQA") >= 0;
+            bool festival = Array.IndexOf(args, "-moonlitFestivalQA") >= 0;
+            bool finalPass = Array.IndexOf(args, "-moonlitFinalQA") >= 0;
             bool guardianOnly = Array.IndexOf(args, "-moonlitGuardianQA") >= 0;
             bool motionOnly = Array.IndexOf(args, "-moonlitMotionQA") >= 0;
-            directory = Path.GetFullPath(Path.Combine(Application.dataPath, guardianOnly ? "../../../QA/Guardian" : motionOnly ? "../../../QA/Motion" : "../../../QA/Campaign"));
+            directory = Path.GetFullPath(Path.Combine(Application.dataPath, lanternUpdate ? "../../../QA/LanternTrails" : festival ? "../../../QA/Festival" : finalPass ? "../../../QA/FinalPass" : Array.IndexOf(args,"-moonlitCrossingQA")>=0 ? "../../../QA/Crossings" : guardianOnly ? "../../../QA/Guardian" : motionOnly ? "../../../QA/Motion" : "../../../QA/Campaign"));
             Directory.CreateDirectory(directory);
             report.build = Application.version + " / Unity " + Application.unityVersion;
             Application.logMessageReceived += Logged;
@@ -71,11 +74,28 @@ namespace Moonlit
             keyboard = InputSystem.AddDevice<Keyboard>("Campaign QA");
             keyboard.MakeCurrent();
             yield return new WaitForSeconds(2.3f);
-            if (guardianOnly) yield return ReviewGuardian(Array.IndexOf(args, "-guardianFilm") >= 0);
+            if (lanternUpdate) yield return ReviewLanternUpdate();
+            else if (festival) yield return ReviewFestival();
+            else if (finalPass) yield return ReviewFinalPass();
+            else if (Array.IndexOf(args,"-moonlitCrossingQA")>=0) {
+                game.StartChapter(1);
+                while (game.IsLoadingChapter) yield return null;
+                yield return new WaitForSecondsRealtime(1.3f); Capture(game,"story-moon-before");
+                yield return new WaitForSecondsRealtime(2.1f); Capture(game,"story-four-pieces");
+                yield return new WaitForSecondsRealtime(3.7f); Capture(game,"story-four-lands");
+                Record("four_piece_intro",game.State==GameState.Prologue && game.Motes==0 && game.Shards==0,game.State.ToString());
+                yield return new WaitUntil(()=>game.State==GameState.Playing);
+                game.StartChapter(1); while (game.IsLoadingChapter) yield return null; yield return null; game.EndStory();
+                Record("skip_intro",game.State==GameState.Playing && game.Elapsed<.25f,game.State.ToString());
+                yield return MoonlitCampaignRoute.CheckCrossings(game,Record);
+            }
+            else if (guardianOnly) yield return ReviewGuardian(Array.IndexOf(args, "-guardianFilm") >= 0);
             else if (motionOnly)
             {
-                game.tutorials.Enabled = false; game.StartRun();
-                game.Complete(); game.NextChapter(); game.Complete();
+                game.tutorials.Enabled = false; game.StartChapter(1,false);
+                while (game.IsLoadingChapter) yield return null;
+                game.Complete(); game.NextChapter(); while (game.IsLoadingChapter) yield return null;
+                game.Complete();
                 yield return ObserveRun(null);
                 yield return ObserveClimb(null);
             }
@@ -85,7 +105,10 @@ namespace Moonlit
                 if (!routeOnly) yield return Fixtures();
                 if (Array.IndexOf(args,"-fixturesOnly") < 0)
                 {
-                    game.Home(); game.tutorials.Enabled = true;
+                    game.Home(); while (game.IsLoadingChapter) yield return null;
+                    game.tutorials.Enabled = true;
+                    recordTale=Array.IndexOf(args,"-taleFilm")>=0;
+                    if(Array.IndexOf(args,"-fixedRoute")>=0) { Time.captureDeltaTime=.02f; Application.targetFrameRate=240; }
                     yield return MoonlitCampaignRoute.Play(game,(ok,detail) => Record("continuous_four_chapter_route",ok,detail));
                 }
             }
@@ -95,13 +118,29 @@ namespace Moonlit
             Application.Quit(report.passed ? 0 : 1);
         }
 
+        public static IEnumerator GatherMotes(MoonlitGame game, int leave = 0)
+        {
+            foreach (var token in game.level.pickups)
+            {
+                if (token.kind != PickupKind.Mote || token.Collected || game.TotalMotes-game.Motes <= leave) continue;
+                game.player.Teleport((Vector2)token.transform.position - Vector2.up*.72f);
+                yield return new WaitForFixedUpdate();
+                yield return new WaitForFixedUpdate();
+            }
+        }
+
         IEnumerator Fixtures()
         {
             game.tutorials.Enabled = false;
             Capture(game,"home");
             yield return Press(Key.Enter);
-            Record("home_enter",game.State == GameState.Playing && game.Chapter == 1, game.State.ToString());
-            if (game.State != GameState.Playing) game.StartRun();
+            Record("home_opens_picker", game.State == GameState.Home && VisibleButton("Chapter 1"), "Play opens chapter selection");
+            yield return Press(Key.Enter);
+            while (game.IsLoadingChapter) yield return null;
+            Record("home_enter",game.State == GameState.Prologue && game.Chapter == 1, game.State.ToString());
+            if (game.InStory) game.EndStory();
+            if (game.State != GameState.Playing) game.StartChapter(1,false);
+            while (game.IsLoadingChapter) yield return null;
             yield return new WaitForSeconds(.3f);
             var p = game.player;
             CheckHeartImages("full", 3);
@@ -194,13 +233,18 @@ namespace Moonlit
                 bool reached = game.Shards == chapter && (chapter < 4 ? game.State == GameState.Complete : game.Boss && game.Boss.Active);
                 Record("shard_" + chapter,reached,game.State.ToString());
                 if (!reached) yield break;
-                if (chapter < 4) { if (chapter == 1) { yield return new WaitForSeconds(1f); Capture(game,"chapter-clear"); } game.NextChapter(); yield return new WaitForSeconds(.3f); }
+                if (chapter < 4) { if (chapter == 1) { yield return new WaitForSeconds(1f); Capture(game,"chapter-clear"); } game.NextChapter(); while (game.IsLoadingChapter) yield return null; yield return new WaitForSeconds(.3f); }
                 else Capture(game,"guardian");
             }
-            game.Home(); game.ContinueJourney();
+            game.Home(); while (game.IsLoadingChapter) yield return null;
+            game.ContinueJourney();
+            while (game.IsLoadingChapter) yield return null;
             Record("continue_unlocked_chapter",game.State == GameState.Playing && game.Chapter == 4 && game.Shards == 3,game.LevelTitle);
-            game.Home(); game.StartRun();
+            game.Home(); while (game.IsLoadingChapter) yield return null;
+            game.StartChapter(1,false);
+            while (game.IsLoadingChapter) yield return null;
             Record("replay_resets_chapter",game.Chapter == 1 && game.Shards == 0 && game.CheckpointIndex == 0 && game.FurthestChapter == 4,game.LevelTitle);
+            p = game.player;
             yield return CheckController();
             game.RestartChapter();
             yield return new WaitForSeconds(2.2f);
@@ -213,7 +257,8 @@ namespace Moonlit
                 float[] starts = { 6,14,20,10 };
                 for (int chapter=1; chapter<=4; chapter++)
                 {
-                    game.StartChapter(chapter);
+                    game.StartChapter(chapter,false);
+                    while (game.IsLoadingChapter) yield return null;
                     p.TestMove = 0; p.Teleport(new Vector2(starts[chapter-1],.06f)); game.cameraRig.Snap();
                     yield return new WaitForSeconds(.45f);
                     string section = Path.Combine(frames,"chapter-" + chapter);

@@ -15,7 +15,9 @@ namespace Moonlit
         public Vector2 NextLight => Complete ? exitBell : centers[LitCount];
 
         MoonlitGame game;
-        GameObject bridge;
+        RisingLanternBridge crossing;
+        public bool BridgeOpen => crossing.Open;
+        public float Rise => crossing.Rise;
         Vector2[] centers;
         SpriteRenderer[] lamps, glows;
         Transform[] hangers;
@@ -26,18 +28,17 @@ namespace Moonlit
 
         public static LanternProcession Create(MoonlitGame game, Transform parent, Vector2[] lampCenters, GameObject bridge)
         {
-            var go = new GameObject("Lễ rước đèn");
+            var go = new GameObject("Lantern Procession");
             go.transform.SetParent(parent, false);
             var trail = go.AddComponent<LanternProcession>();
             trail.game = game;
-            trail.bridge = bridge;
             trail.centers = lampCenters;
-            trail.Build();
+            trail.Build(bridge);
             game.player.LanternPulsed += trail.ReceiveLight;
             return trail;
         }
 
-        void Build()
+        void Build(GameObject bridge)
         {
             lamps = new SpriteRenderer[centers.Length];
             glows = new SpriteRenderer[centers.Length];
@@ -58,38 +59,39 @@ namespace Moonlit
             }
             if (float.IsPositiveInfinity(left))
                 exitBell = centers[centers.Length - 1] + new Vector2(3, 0);
-            bridge.SetActive(false);
+            crossing = bridge.AddComponent<RisingLanternBridge>();
+            crossing.Build(4.5f);
             for (int i = 0; i < Count; i++)
             {
                 Vector2 center = centers[i];
                 // Put the footing beneath the actual upright. A post next to a
                 // terrace edge can stand over a different surface than its lamp.
                 Vector2 basePoint = FindFooting(center + Vector2.left * .58f);
-                Transform post = Group("Cột rước đèn " + (i + 1));
+                Transform post = Group("Procession Post " + (i + 1));
                 Vector2 tip = center + Vector2.up * .9f;
                 BuildPost(post, basePoint, tip);
-                hangers[i] = new GameObject("Móc treo").transform;
+                hangers[i] = new GameObject("Lantern Hanger").transform;
                 hangers[i].SetParent(post, false);
                 hangers[i].position = tip;
-                Rod("Dây đèn", tip, center + Vector2.up * .34f, .033f, Edge, hangers[i], 6);
-                lamps[i] = Visuals.Sprite("Đèn giấy", star, center, hangers[i], 7);
+                Rod("Lantern Cord", tip, center + Vector2.up * .34f, .033f, Edge, hangers[i], 6);
+                lamps[i] = Visuals.Sprite("Paper Lantern", star, center, hangers[i], 7);
                 lamps[i].transform.localScale = Vector3.one * (.72f / star.bounds.size.y);
                 lamps[i].color = Silk;
-                glows[i] = Visuals.Halo("Ánh đèn", center, 2.1f, Color.clear, hangers[i], 8, lightScenery: true);
+                glows[i] = Visuals.Halo("Lantern Glow", center, 2.1f, Color.clear, hangers[i], 8, lightScenery: true);
                 for (int k = 0; k <= i; k++)
                 {
                     Vector2 knot = new Vector2(basePoint.x - .11f, basePoint.y + .63f + k * .13f);
-                    Rod("Vạch chuông", knot, knot + Vector2.right * .24f, .046f, Edge, post, 6);
+                    Rod("Chime Marker", knot, knot + Vector2.right * .24f, .046f, Edge, post, 6);
                 }
             }
             var bellBase = FindFooting(exitBell + Vector2.left * .40f);
             exitBell = new Vector2(exitBell.x, bellBase.y + 1.25f);
-            var b = Group("Chuông đầu cầu");
+            var b = Group("Bridge Bell");
             Vector2 hook = exitBell + Vector2.up * .46f;
             BuildPost(b, bellBase, hook);
-            Rod("Dây chuông", hook, exitBell + Vector2.up * .16f, .035f, Edge, b, 6);
-            bell = Visuals.Sprite("Chuông đồng", Visuals.MoonMote, exitBell, b, 7);
-            bell.transform.localScale = new Vector3(.65f, .45f, 1);
+            Rod("Bell Cord", hook, exitBell + Vector2.up * .16f, .035f, Edge, b, 6);
+            bell = Visuals.Sprite("Bronze Bell", Visuals.MoonMote, exitBell, b, 7);
+            bell.transform.localScale = Vector3.one * .53f;
             bell.color = Bamboo;
         }
 
@@ -127,16 +129,16 @@ namespace Moonlit
             float armY = hook.y + .07f;
             Vector2 foot = ground - Vector2.up * .09f;
             Vector2 top = new Vector2(foot.x + .08f, armY);
-            Rod("Thân tre", foot, top, .14f, Bamboo, parent, 4);
-            Rod("Vệt nắng trên tre", foot + Vector2.left * .039f, top + Vector2.left * .039f, .025f, Edge, parent, 5);
-            Rod("Tay đỡ đèn", top + Vector2.left * .10f, hook + Vector2.right * .10f, .10f, Bamboo, parent, 5);
-            Rod("Thanh chống", top + Vector2.down * .41f, hook + Vector2.left * .09f, .065f, Bamboo, parent, 4);
-            Rod("Dây buộc", top + new Vector2(-.09f, -.14f), top + new Vector2(.11f, -.08f), .055f, Edge, parent, 6);
+            Rod("Bamboo Post", foot, top, .14f, Bamboo, parent, 4);
+            Rod("Bamboo Highlight", foot + Vector2.left * .039f, top + Vector2.left * .039f, .025f, Edge, parent, 5);
+            Rod("Lantern Arm", top + Vector2.left * .10f, hook + Vector2.right * .10f, .10f, Bamboo, parent, 5);
+            Rod("Diagonal Brace", top + Vector2.down * .41f, hook + Vector2.left * .09f, .065f, Bamboo, parent, 4);
+            Rod("Lashing", top + new Vector2(-.09f, -.14f), top + new Vector2(.11f, -.08f), .055f, Edge, parent, 6);
             var stone = game.art.environment[6];
-            var baseStone = Visuals.Sprite("Chân đá", stone, ground, parent, 3);
-            var size = new Vector3(.65f / stone.bounds.size.x, .30f / stone.bounds.size.y, 1);
-            baseStone.transform.localScale = size;
-            baseStone.transform.position = ground + Vector2.up * (-.08f - stone.bounds.min.y * size.y);
+            var baseStone = Visuals.Sprite("Stone Base", stone, ground, parent, 3);
+            float scale = .65f / stone.bounds.size.x;
+            baseStone.transform.localScale = Vector3.one * scale;
+            baseStone.transform.position = ground + Vector2.up * (-.08f - stone.bounds.min.y * scale);
             baseStone.color = new Color(.76f, .74f, .64f);
         }
 
@@ -156,14 +158,12 @@ namespace Moonlit
             game.effects.Burst(centers[index], Visuals.Gold, 17, 2);
             if (Complete)
             {
-                bridge.SetActive(true);
+                crossing.StartRising();
                 bell.color = Color.white;
                 game.effects.Ring(exitBell, Visuals.Mint, 4);
-                foreach (var floor in bridge.GetComponentsInChildren<PlatformSurface>())
-                    game.effects.Burst(floor.transform.position + Vector3.up * .15f, Visuals.Mint, 12, 1.8f);
-                game.Toast("CẦU RƯỚC ĐÈN ĐÃ MỞ", "Ba ngọn đèn cùng sáng. Cuội có thể sang bờ bên kia.");
+                game.Toast("BA NGỌN ĐÈN ĐÃ SÁNG", "Cầu đang trồi lên. Chờ nhịp tre ngang bờ rồi hãy qua.");
             }
-            else game.Toast("ĐÈN RƯỚC  " + LitCount + " / " + Count, "Đèn kế tiếp đang chờ ở phía trước.");
+            else game.Toast("ĐÃ THẮP " + LitCount + " TRONG " + Count + " NGỌN", "Tìm ngọn đèn ông sao tiếp theo dọc đường.");
             nearLamp = false;
         }
 
@@ -183,12 +183,20 @@ namespace Moonlit
             if (Complete) return;
             Vector2 player = game.player.Body.position + Vector2.up * .9f;
             bool byLamp = Vector2.Distance(player, NextLight) < game.tuning.pulseRadius + .35f;
-            if (byLamp && !nearLamp) game.Toast("ĐÈN RƯỚC  " + (LitCount + 1) + " / " + Count, "Đến bên đèn ông sao rồi bấm J để thắp.");
+            if (byLamp && !nearLamp) game.Toast("ĐÈN ÔNG SAO THỨ " + (LitCount + 1), $"Đến gần rồi bấm {game.Controls.Label(GameAction.Lantern)} để thắp đèn.");
             nearLamp = byLamp;
             bool byBell = Vector2.Distance(player, exitBell) < 3;
             if (byBell && !atBell)
-                game.Toast("CẦU CHƯA SÁNG", "Quay lại thắp đèn thứ " + (LitCount + 1) + ", cách đây " + Mathf.RoundToInt(Mathf.Abs(NextLight.x - exitBell.x)) + " ô.");
+                game.Toast("CẦU CHƯA MỞ", "Quay lại thắp ngọn đèn thứ " + (LitCount + 1) + " ở bên trái.");
             atBell = byBell;
+        }
+
+        public void ResetLights()
+        {
+            LitCount = 0;
+            atBell = nearLamp = false;
+            crossing.Lower();
+            bell.color = Bamboo;
         }
 
         void OnEnable()

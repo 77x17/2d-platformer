@@ -19,8 +19,13 @@ namespace Moonlit
         IEnumerator ReviewGuardian(bool film)
         {
             game.tutorials.Enabled = false;
-            game.StartRun();
-            for (int chapter = 1; chapter < 4; chapter++) { game.Complete(); game.NextChapter(); }
+            game.StartChapter(1,false);
+            while (game.IsLoadingChapter) yield return null;
+            for (int chapter = 1; chapter < 4; chapter++)
+            {
+                game.Complete(); game.NextChapter();
+                while (game.IsLoadingChapter) yield return null;
+            }
             game.player.Teleport(game.level.BossFoot + new Vector2(-12, .05f));
             game.Complete();
             var boss = game.Boss;
@@ -74,6 +79,7 @@ namespace Moonlit
 
         void LateUpdate()
         {
+            ObserveTale();
             if (!reviewGuardian || !game.Boss || !game.Boss.Active || game.State != GameState.Playing) return;
             var boss = game.Boss;
             if (filmTick == 0) {

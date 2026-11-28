@@ -25,7 +25,8 @@ namespace Moonlit
             g = MoonlitGame.Instance;
             output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../QA")); Directory.CreateDirectory(output);
             yield return new WaitForSeconds(1);
-            g.StartRun(); g.player.TestInput = true;
+            g.StartChapter(1,false); while (g.IsLoadingChapter) yield return null;
+            g.player.TestInput = true;
             yield return new WaitForSecondsRealtime(1.4f);
             CheckResult("initial_tutorial", g.State == GameState.Tutorial && g.tutorials.CurrentId == 0, "First lesson opens on safe spawn ground");
             float clock = g.Elapsed; Vector2 playerAt = g.player.Body.position, enemyAt = g.enemies[0].transform.position;
@@ -96,9 +97,11 @@ namespace Moonlit
             int seen = g.tutorials.SeenCount;
             g.Hurt(true); yield return new WaitForSeconds(.9f);
             CheckResult("death_keeps_lessons_seen", g.tutorials.SeenCount == seen, "Lessons do not repeat after a death");
-            g.tutorials.Open(1); yield return new WaitForSecondsRealtime(.2f); g.Home(); yield return null;
+            g.tutorials.Open(1); yield return new WaitForSecondsRealtime(.2f); g.Home(); while (g.IsLoadingChapter) yield return null;
+            yield return null;
             CheckResult("home_cancels_modal", g.State == GameState.Home && !g.tutorials.Active && Time.timeScale == 1, "No frozen state after leaving a tutorial");
-            g.StartRun(); yield return new WaitForSeconds(.1f);
+            g.StartChapter(1,false); while (g.IsLoadingChapter) yield return null;
+            yield return new WaitForSeconds(.1f);
             CheckResult("restart_resets_lessons", g.tutorials.SeenCount == 0, "A fresh run can teach again");
             report.passed = report.checks.TrueForAll(c => c.passed);
             File.WriteAllText(Path.Combine(output, "revision-results.json"), JsonUtility.ToJson(report, true));

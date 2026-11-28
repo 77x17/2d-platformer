@@ -19,7 +19,7 @@ Importer tìm hàng alpha liền mạch để đặt **pivot đúng mặt đi**,
 
 ## Play test
 
-Sau khi Unity refresh và compile, importer tự gắn hai asset vào `ArtLibrary`. Có thể chạy thủ công: **Moonlit → 4 - Import readable tokens and platform surfaces**. Mở `Assets/Moonlit/Scenes/Level01_BanyanForest.unity` rồi Play; không cần tạo lại scene hoặc build.
+Sau khi Unity refresh và compile, importer tự gắn hai asset vào `ArtLibrary`. Có thể chạy thủ công: **Moonlit → 4 - Import readable tokens and platform surfaces**. Mở `Assets/Moonlit/Scenes/01_Bamboo_Village.unity` rồi Play; không cần tạo lại scene hoặc build.
 
 Runtime và Editor C# đã compile thành công bằng Roslyn đi kèm Unity 6000.3.16f1, dùng reference của project. Hai PNG mới có alpha trong suốt. Log: `QA/Readability/compile.log`. Chưa chạy gameplay/render mới hoặc build Windows; báo cáo 58/58 ngày 18/11 thuộc bản trước.
 

@@ -10,8 +10,8 @@ namespace Moonlit
 
         public CuoiFootShadow(Transform actor)
         {
-            cast = Visuals.Halo("Bóng đổ từ đèn", actor.position, 1, Color.clear, actor, 7);
-            contact = Visuals.Halo("Bóng tiếp đất", actor.position, 1, Color.clear, actor, 8);
+            cast = Visuals.Halo("Lantern Cast Shadow", actor.position, 1, Color.clear, actor, 7);
+            contact = Visuals.Halo("Foot Contact Shadow", actor.position, 1, Color.clear, actor, 8);
         }
 
         public void Update(Vector2 feet, bool right, float contactX)

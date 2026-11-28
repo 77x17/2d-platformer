@@ -117,6 +117,58 @@ def render_effect(parts, source=None):
     return np.tanh(mono * 1.2)
 
 
+def render_scenery():
+    """Loopable original field textures and two short mechanisms. No recorded samples."""
+    source = np.random.default_rng(271128)
+    mechanical = {
+        "woodLatch": [(0,"drum",410,183,.075,.63),(.055,"drum",290,126,.12,.72),
+                      (.064,"string",185,145,.18,.21)],
+        "deckSettle": [(0,"drum",125,59,.19,.73),(.045,"rustle",245,125,.18,.32),
+                       (.12,"drum",236,113,.105,.42)],
+    }
+    for name, parts in mechanical.items():
+        write_clip("sfx_" + name, render_effect(parts, source))
+
+    seconds = 12
+    frames = RATE * seconds
+    p = np.arange(frames) / frames
+    hz = np.fft.rfftfreq(frames, 1 / RATE)
+
+    def band(low, high):
+        # Circular filtering keeps the last-to-first sample step continuous.
+        shape = (1 - np.exp(-(hz / low) ** 2)) * np.exp(-(hz / high) ** 2)
+        noise = np.fft.irfft(np.fft.rfft(source.standard_normal(frames)) * shape)
+        return noise / np.std(noise)
+
+    for name in ("amb_canopy", "amb_river"):
+        channels = []
+        shared = band(160, 1200)
+        for side in (-1, 1):
+            if name == "amb_canopy":
+                gust = (.45 + .29*np.cos(TAU*p + side*.28) + .12*np.sin(TAU*3*p)) ** 2
+                leaves = (.70*band(680, 3300) + .30*shared) * gust
+                rasp = np.maximum(0, np.cos(TAU*5*p + side*.38)) ** 9
+                sound = .14*leaves + .025*band(1900, 5200)*rasp
+            else:
+                wash = .7 + .17*np.sin(TAU*2*p + side*.5) + .09*np.sin(TAU*7*p)
+                sound = .072*(.6*shared + .70*band(400, 2700))*wash
+                # Individual droplets overlap the loop boundary using periodic elapsed time.
+                for _ in range(18):
+                    t = (p * seconds - source.uniform(0, seconds)) % seconds
+                    tone = source.uniform(510, 1080)
+                    sound += .09*np.minimum(1, t/.012)*np.exp(-t*18)*np.sin(TAU*(tone*t + 18*(1-np.exp(-t*13))))
+            channels.append(sound)
+        write_clip(name, np.column_stack(channels))
+
+
+def write_clip(name, samples):
+    path = DEST / (name + ".wav")
+    with wave.open(str(path), "wb") as out:
+        out.setparams((1 if samples.ndim == 1 else samples.shape[1], 2, RATE, 0, "NONE", ""))
+        out.writeframes(np.rint(np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes())
+    meta(path)
+
+
 def meta(path):
     guid = uuid.uuid5(uuid.NAMESPACE_URL, "moonlit/audio/" + path.name).hex
     header = f"fileFormatVersion: 2\nguid: {guid}\n"
@@ -149,7 +201,11 @@ def main():
     DEST.mkdir(exist_ok=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("--guardian", action="store_true", help="Render only the banyan encounter sounds")
+    parser.add_argument("--scenery", action="store_true", help="Render only environmental loops and mechanism foley")
     args = parser.parse_args()
+    if args.scenery:
+        render_scenery()
+        return
     if not args.guardian:
         meta(DEST)
     bank = guardian_foley if args.guardian else {**effects, **guardian_foley}
@@ -162,6 +218,8 @@ def main():
             out.setparams((1, 2, RATE, 0, "NONE", ""))
             out.writeframes(np.rint(clip * 32767).astype("<i2").tobytes())
         meta(path)
+    if not args.guardian:
+        render_scenery()
 
 
 if __name__ == "__main__":

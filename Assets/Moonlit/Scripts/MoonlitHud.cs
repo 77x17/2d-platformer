@@ -14,7 +14,8 @@ namespace Moonlit
         RectTransform root;
         TMP_FontAsset displayFont, interfaceFont;
         GameObject home, hud, pause, victory, defeat, ending, tutorialScreen, picker, splash, credits;
-        Image matte, fade, progressFill, abilityFill;
+        Image matte, fade, progressFill;
+        TMP_Text retryAt;
         Image promptBoard, bossBoard, introBoard;
         readonly Image[] bossBuds = new Image[6];
         readonly Image[] hearts = new Image[3];
@@ -22,19 +23,19 @@ namespace Moonlit
         Sprite heartFull, heartEmpty;
         RectTransform lifeCard;
         Canvas mainCanvas;
-        TMP_Text healthCount;
-        MoonlitEmblem lantern;
-        TMP_Text lifeChapter, zone, shardCount, motes, abilityState, currentSkill, prompt, bossCount, bossHint, introName;
+        TMP_Text lifeChapter, zone, motes, currentSkill, prompt, bossCount, bossHint, introName;
         TMP_Text toastTitle, toastBody, tutorialTitle, tutorialBody, tutorialAction, tutorialProgress, tutorialSubject;
         CanvasGroup toastGroup, introGroup, tutorialGroup, splashGroup, victoryGroup, defeatGroup;
         Button tutorialContinue;
         GameState? lastState;
-        int buttonActivationFrame = -1, previousHealth = 3, previousShards = -1;
-        int shownMotes = -1, shownTotal = -1, shownCooldown = -1;
-        float toastTimer, tokenFlash, heartFlash, shardFlash, lanternFlash, splashTime, panelTime;
+        int buttonActivationFrame = -1, previousHealth = 3;
+        int shownMotes = -1, shownTotal = -1;
+        string chapterSkill = "";
+        float toastTimer, tokenFlash, heartFlash, splashTime, panelTime;
         bool showingSplash = true;
         public bool ButtonActivatedThisFrame => buttonActivationFrame == Time.frameCount;
-        public bool BlocksDefaultSubmit => showingSplash || (picker && picker.activeSelf) || (credits && credits.activeSelf);
+        public bool BlocksDefaultSubmit => showingSplash || (picker && picker.activeSelf) || CapturesMenuInput;
+        public bool CapturesMenuInput => (settings && settings.activeSelf) || (credits && credits.activeSelf);
         public bool HeartDisplayVisible => lifeCard && lifeCard.gameObject.activeInHierarchy;
         public int VisibleHeartCount
         {
@@ -95,11 +96,14 @@ namespace Moonlit
             if (!displayFont) displayFont = interfaceFont;
             BuildHome();
             BuildHud();
+            BuildChapterMap(fullScreen);
             BuildPause();
             BuildVictory();
             BuildDefeat();
             BuildEnding();
+            BuildStory();
             BuildTutorial();
+            BuildSettings();
             BuildCredits();
             var note = Panel("Checkpoint notification", root, 480, 110, 640, 84, ink);
             Bar(note.transform, 0, 0, 3, 84, gold);
@@ -110,13 +114,49 @@ namespace Moonlit
             BuildSplash();
             fade = Panel("Respawn fade", fullScreen, 0, 0, 1600, 900, Color.clear);
             Stretch(fade.rectTransform);
+            BuildLoading(fullScreen);
             RefreshState();
         }
+
+        GameObject loadingCover;
+        RawImage loadingArt;
+        TMP_Text loadingPlace;
+        Image loadingBar;
+        RectTransform loadingStar;
+
+        void BuildLoading(RectTransform canvas)
+        {
+            var cover = Panel("Scene loading",canvas,0,0,1600,900,ink);
+            Stretch(cover.rectTransform); cover.raycastTarget = true; loadingCover = cover.gameObject;
+            loadingArt = new GameObject("Destination artwork",typeof(RectTransform),typeof(RawImage)).GetComponent<RawImage>();
+            loadingArt.transform.SetParent(cover.transform,false); Stretch(loadingArt.rectTransform);
+            var fit = loadingArt.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; fit.aspectRatio = 16f/9;
+            loadingArt.color = new Color(.66f,.71f,.78f,1); loadingArt.raycastTarget = false;
+            var panel = Panel("Destination",cover.transform,0,0,600,132,new Color(.035f,.078f,.098f,.96f));
+            var rect = panel.rectTransform; rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f,0);
+            rect.anchoredPosition = new Vector2(0,62);
+            loadingStar = Emblem(panel.transform,MoonlitEmblem.Shape.Star,29,37,54,54,gold).rectTransform;
+            Label(panel.transform,"ĐANG TẢI",105,17,462,27,16,gold,true);
+            loadingPlace = Label(panel.transform,"",103,43,475,57,34,cream,false,TextAlignmentOptions.MidlineLeft,true);
+            Bar(panel.transform,106,108,449,3,rule);
+            loadingBar = Bar(panel.transform,106,108,0,3,gold);
+            loadingCover.SetActive(false);
+        }
+
+        public void ShowLoading(int chapter)
+        {
+            loadingPlace.text = chapter == 0 ? "Trở về màn hình chính" : MoonlitGame.ChapterName(chapter);
+            loadingArt.texture = Resources.Load<Texture2D>(chapter == 0 ? "VillageUnderBrokenMoon" : "Scenery"+chapter);
+            SetLoadingProgress(0); loadingCover.SetActive(true);
+        }
+        public void SetLoadingProgress(float amount) => loadingBar.rectTransform.sizeDelta = new Vector2(449*Mathf.Clamp01(amount),3);
+        void AnimateLoading() => loadingStar.localRotation = Quaternion.Euler(0,0,Mathf.Sin(Time.unscaledTime*3)*9);
 
         void BuildHud()
         {
             hud = Layer("In-game HUD");
-            var life = Panel("Health and lantern", mainCanvas.transform, 26, 22, 330, 80, ink);
+            var life = Panel("Health and lantern", mainCanvas.transform, 26, 22, 220, 79, ink);
             lifeCard = life.rectTransform;
             var vitalsOverlay = life.gameObject.AddComponent<Canvas>();
             vitalsOverlay.overrideSorting = true;
@@ -130,24 +170,11 @@ namespace Moonlit
                 hearts[i].sprite = heartFull;
                 hearts[i].preserveAspect = true;
             }
-            healthCount = Label(life.transform, "3/3", 137, 10, 43, 31, 19, cream, true);
-            lifeChapter = Label(life.transform, "", 15, 47, 167, 24, 17, cream, true);
-            Bar(life.transform, 181, 13, 1, 54, rule);
-            lantern = Emblem(life.transform, MoonlitEmblem.Shape.Star, 194, 12, 32, 32, gold);
-            Label(life.transform, "J / X", 234, 9, 87, 29, 17, paper, true);
-            abilityState = Label(life.transform, "", 196, 45, 130, 22, 14, dim);
-            Bar(life.transform, 196, 67, 117, 3, new Color(.29f,.33f,.32f));
-            abilityFill = Bar(life.transform, 196, 67, 117, 3, gold);
-            var stats = Panel("Moon counters", hud.transform, 1270, 22, 234, 80, ink);
-            var shard = Panel("Shard", stats.transform, 12, 8, 53, 60, Color.white);
-            shard.sprite = game.art.moon;
-            shard.preserveAspect = true;
-            shardCount = Label(stats.transform, "", 70, 8, 158, 32, 21, cream, true);
-            motes = Label(stats.transform, "", 70, 43, 161, 22, 15, dim);
-            var pauseControl = Button(hud.transform, "", 1515, 22, 59, 65, game.TogglePause, false);
-            pauseControl.name = "Tạm dừng";
-            Bar(pauseControl.transform, 21,22,6,22,cream);
-            Bar(pauseControl.transform, 33,22,6,22,cream);
+            lifeChapter = Label(life.transform, "", 15, 45, 126, 26, 18, cream, true);
+            Bar(life.transform, 144, 10, 1, 57, rule);
+            var lantern = Panel("Cuoi's paper lantern", life.transform, 154, 10, 54, 58, Color.white);
+            lantern.sprite = Resources.Load<Sprite>("StarLantern");
+            lantern.preserveAspect = true;
             zone = Label(life.transform, "", 3, 82, 540, 30, 16, cream, true);
             AddShadow(zone);
             currentSkill = Label(hud.transform, "", 30, 827, 445, 31, 16, cream, true);
@@ -174,11 +201,15 @@ namespace Moonlit
         void Update()
         {
             if (!game) return;
+            RestoreMenuNavigation();
             float dt = Time.unscaledDeltaTime;
+            if (game.State == GameState.Loading) { AnimateLoading(); return; }
+            if (game.InStory) { UpdateStory(dt); return; }
             if (credits.activeSelf)
             {
                 if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) CloseCredits();
             }
+            else if (settings.activeSelf) UpdateSettingsInput();
             else if (game.State == GameState.Home)
             {
                 UpdateHomeInput(dt);
@@ -208,8 +239,6 @@ namespace Moonlit
                 tutorialGroup.alpha = lesson.CardOpacity;
                 tutorialContinue.interactable = lesson.CanContinue;
             }
-            if (game.State == GameState.Paused)
-                soundLabel.text = game.audioFx.Muted ? "ÂM THANH TẮT   [M]" : "ÂM THANH BẬT   [M]";
             toastTimer = Mathf.Max(0, toastTimer - Time.deltaTime);
             toastGroup.alpha = game.State == GameState.Playing
                 ? Mathf.Min(Mathf.Clamp01(toastTimer * 3), Mathf.Clamp01((4 - toastTimer) * 4)) : 0;
@@ -221,40 +250,22 @@ namespace Moonlit
             var player = game.player;
             float x = player.transform.position.x;
             zone.text = level.AreaName(x);
-            if (game.Shards != previousShards)
-            {
-                shardFlash = previousShards < 0 ? 0 : 1;
-                previousShards = game.Shards;
-                shardCount.text = $"{game.Shards} / 4 mảnh";
-            }
-            shardFlash = Mathf.Max(0, shardFlash - dt * 2);
-            shardCount.rectTransform.localScale = Vector3.one * (1 + shardFlash * .10f);
+            RefreshLocalMap();
             if (shownMotes != game.Motes || shownTotal != game.TotalMotes)
             {
                 shownMotes = game.Motes; shownTotal = game.TotalMotes;
                 motes.text = $"{shownMotes} / {shownTotal} hạt trăng";
             }
             tokenFlash = Mathf.Max(0, tokenFlash - dt * 2.5f);
-            motes.color = Color.Lerp(dim, gold, tokenFlash);
-            abilityFill.rectTransform.sizeDelta = new Vector2(117 * player.PulseReady, 3);
-            int cooldown = Mathf.CeilToInt(player.Cooldown * 10);
-            if (cooldown != shownCooldown)
-            {
-                if (cooldown == 0 && shownCooldown > 0) lanternFlash = 1;
-                shownCooldown = cooldown;
-                abilityState.text = cooldown == 0 ? "Sẵn sàng" : $"Hồi {cooldown * .1f:0.0} s";
-            }
-            lanternFlash = Mathf.Max(0, lanternFlash - dt * 2.4f);
-            lantern.color = Color.Lerp(Color.Lerp(dim, gold, player.PulseReady), Color.white, lanternFlash);
-            currentSkill.text = game.Chapter == 2 ? "SPACE ×2   Nhảy đôi" : game.Chapter == 3 ? "GIỮ HƯỚNG + SPACE   Leo vách"
-                : game.Chapter == 4 ? player.DashReady >= .99f ? "SHIFT / K   Lướt" : "Lướt đang hồi…" : "";
+            motes.color = Color.Lerp(cream, gold, tokenFlash);
+            currentSkill.text = game.Chapter == 4 && player.DashReady < .99f ? "Đang hồi lướt" : chapterSkill;
             progressFill.rectTransform.sizeDelta = new Vector2(1541 * Mathf.Clamp01(game.Farthest / Mathf.Max(1, level.EndX)), 3);
             var boss = game.Boss;
             bool inEncounter = boss && boss.Active;
             bossBoard.gameObject.SetActive(inEncounter);
             if (inEncounter)
             {
-                bossCount.text = $"CÂY ĐA   ·   {boss.CalmedRoots} / {boss.RootCount} RỄ ĐÃ DỊU";
+                bossCount.text = $"CÂY ĐA   ·   {boss.CalmedRoots} / {boss.RootCount} RỄ ĐÃ YÊN";
                 bossHint.text = boss.Hint;
                 for (int i = 0; i < bossBuds.Length; i++)
                     bossBuds[i].color = i < boss.LitBuds ? gold : i == boss.LitBuds && boss.TargetOpen ? cream : rule;
@@ -274,7 +285,6 @@ namespace Moonlit
                 if (health < previousHealth) heartFlash = 1;
                 previousHealth = health;
             }
-            healthCount.SetText("{0}/3", health);
             heartFlash = Mathf.Max(0, heartFlash - dt * 3.3f);
             for (int i = 0; i < hearts.Length; i++)
             {
@@ -287,6 +297,7 @@ namespace Moonlit
         void LateUpdate()
         {
             if (HeartDisplayVisible) AlignVitals();
+            if (pocket.gameObject.activeSelf) AlignPocket();
         }
 
         void AlignVitals()
@@ -309,13 +320,20 @@ namespace Moonlit
         public void RefreshState()
         {
             GameState state = game.State;
+            if (loadingCover) loadingCover.SetActive(state == GameState.Loading);
+            SetMapVisibility(state);
             var original = lastState;
             lastState = state;
             bool changed = original != state;
-            if (changed) credits.SetActive(false);
+            if (changed)
+            {
+                StopListening();
+                settings.SetActive(false);
+                credits.SetActive(false);
+            }
             if (state != GameState.Playing) toastGroup.alpha = 0;
             if (state != GameState.Home) showingSplash = false;
-            matte.gameObject.SetActive(state == GameState.Home || state == GameState.Ending);
+            matte.gameObject.SetActive(state == GameState.Ending || game.InStory);
             home.SetActive(state == GameState.Home);
             hud.SetActive(state == GameState.Playing || state == GameState.Respawning);
             bool showVitals = state == GameState.Playing || state == GameState.Respawning
@@ -331,6 +349,7 @@ namespace Moonlit
             victory.SetActive(state == GameState.Complete);
             defeat.SetActive(state == GameState.Defeat);
             ending.SetActive(state == GameState.Ending);
+            story.SetActive(game.InStory);
             tutorialScreen.SetActive(state == GameState.Tutorial);
             splash.SetActive(showingSplash && state == GameState.Home);
             if (!changed && !(state == GameState.Playing && game.Elapsed == 0f)) return;
@@ -343,16 +362,20 @@ namespace Moonlit
             }
             else if (state == GameState.Playing)
             {
+                chapterSkill = game.Chapter == 2 ? game.Controls.Label(GameAction.Jump) + " ×2   Nhảy đôi" :
+                    game.Chapter == 3 ? "Hướng + " + game.Controls.Label(GameAction.Jump) + "   Leo vách" :
+                    game.Chapter == 4 ? game.Controls.Label(GameAction.Dash) + "   Lướt" : "";
                 if (game.Elapsed < .1f)
                 {
                     introName.text = game.LevelTitle;
-                    lifeChapter.text = $"MÀN {game.Chapter:00} / 04";
+                    lifeChapter.text = $"Màn {game.Chapter:00}";
                     previousHealth = game.Health;
-                    previousShards = shownMotes = shownCooldown = -1;
-                    toastTimer = tokenFlash = heartFlash = shardFlash = lanternFlash = 0;
+                    shownMotes = -1;
+                    toastTimer = tokenFlash = heartFlash = 0;
                 }
                 Select(null);
             }
+            else if (state == GameState.Map) Select(mapClose);
             else if (state == GameState.Paused)
             {
                 pauseInfo.text = $"{game.LevelTitle}    ·    {TimeText()}";
@@ -369,8 +392,10 @@ namespace Moonlit
             {
                 panelTime = 0;
                 defeatGroup.alpha = 0;
+                retryAt.text = game.CheckpointIndex > 0 ? "Cuội sẽ trở lại cột đèn vừa thắp." : "Thử lại từ đầu đường nhé.";
                 Select(retry);
             }
+            else if (game.InStory) StartStory();
             else if (state == GameState.Ending) Select(endingHome);
             else if (state == GameState.Tutorial) Select(tutorialContinue);
         }
@@ -430,7 +455,7 @@ namespace Moonlit
         TMP_Text Label(Transform parent, string value, float x, float y, float w, float h, int size, Color c,
             bool bold = false, TextAlignmentOptions align = TextAlignmentOptions.MidlineLeft, bool display = false)
         {
-            var t = new GameObject(value.Length == 0 ? "Live text" : value, typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+            var t = new GameObject(value.Length == 0 ? "Live Text" : display ? "Heading" : "Label", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
             Place(t.rectTransform,parent,x,y,w,h);
             t.font = display ? displayFont : interfaceFont;
             t.text = value;
@@ -448,10 +473,10 @@ namespace Moonlit
             t.outlineColor = new Color32(8,16,26,255);
             t.outlineWidth = .2f;
         }
-        Button Button(Transform parent, string title, float x, float y, float w, float h,
+        Button Button(Transform parent, string objectName, string title, float x, float y, float w, float h,
             UnityEngine.Events.UnityAction clicked, bool primary)
         {
-            var face = Panel(title, parent,x,y,w,h,Color.white);
+            var face = Panel(objectName, parent,x,y,w,h,Color.white);
             face.raycastTarget = true;
             var b = face.gameObject.AddComponent<Button>();
             b.targetGraphic = face;
@@ -481,6 +506,7 @@ namespace Moonlit
         }
         void OnDestroy()
         {
+            if (storyBark) Destroy(storyBark);
             if (displayFont && displayFont != interfaceFont) Destroy(displayFont);
         }
     }
